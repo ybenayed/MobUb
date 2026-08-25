@@ -8,3 +8,14 @@ target/
 
 # Logs
 *.log
+
+# IDE
+.idea/
+*.iml
+
+# Données OTP générées/téléchargées, ne pas versionner
+otp-service/otp-data/*.osm.pbf
+otp-service/otp-data/*.osm.pbf.bak
+otp-service/otp-data/*.zip
+otp-service/otp-data/graph.obj
+otp-service/otp-data/graph.obj.*
