@@ -76,6 +76,7 @@ fun DrawerMenu(
     onLanguageSelected: (AppLanguage) -> Unit,
     onWeatherClick: () -> Unit = {},
     onInternshipClick: () -> Unit = {}, // <-- Callback vers l'écran "À propos"
+    onItineraryClick: () -> Unit = {}, // <-- Callback qui ouvre le panneau Itinéraire (bottom sheet)
     onOptionClick: (String, Boolean) -> Unit = { _, _ -> },
     onBackToMap: () -> Unit = {},
     onLogout: () -> Unit = {}
@@ -86,12 +87,14 @@ fun DrawerMenu(
 
     var translatedBornesLabel by remember { mutableStateOf("Bornes électriques") }
     var translatedMeteoLabel by remember { mutableStateOf("Météo") }
+    var translatedItineraryLabel by remember { mutableStateOf("Itinéraire") }
     var translatedLogoutLabel by remember { mutableStateOf("Déconnexion") }
     var translatedBackLabel by remember { mutableStateOf("Retour") }
 
     LaunchedEffect(currentLanguage) {
         translatedBornesLabel = languageViewModel.translate("Bornes électriques")
         translatedMeteoLabel = languageViewModel.translate("Météo")
+        translatedItineraryLabel = languageViewModel.translate("Itinéraire")
         translatedLogoutLabel = languageViewModel.translate("Déconnexion")
         translatedBackLabel = languageViewModel.translate("Retour")
     }
@@ -259,7 +262,22 @@ fun DrawerMenu(
         // --- SECTION BASSE (STATIQUE, TOUJOURS VISIBLE) ---
         HorizontalDivider()
 
-        // 1. SECTION LANGUE
+        // 1. ITINÉRAIRE (ouvre le bottom sheet, même pattern que "À propos"/"Déconnexion")
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onItineraryClick() }
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Directions, contentDescription = translatedItineraryLabel, tint = ObcampusPrimary)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(text = translatedItineraryLabel, modifier = Modifier.weight(1f))
+        }
+
+        HorizontalDivider()
+
+        // 2. SECTION LANGUE
         LanguageDrawerSection(
             languageViewModel = languageViewModel,
             currentLanguage = currentLanguage,
@@ -269,7 +287,7 @@ fun DrawerMenu(
 
         HorizontalDivider()
 
-        // 2. BOUTON PROPRE ET ENCAPSULÉ "À PROPOS" (JUSTE AVANT LA DECONNEXION)
+        // 3. BOUTON "À PROPOS" (JUSTE AVANT LA DECONNEXION)
         AboutDrawerSection(
             languageViewModel = languageViewModel,
             currentLanguage = currentLanguage,
@@ -278,7 +296,7 @@ fun DrawerMenu(
 
         HorizontalDivider()
 
-        // 3. BOUTON DE DECONNEXION
+        // 4. BOUTON DE DECONNEXION
         Row(
             modifier = Modifier
                 .fillMaxWidth()

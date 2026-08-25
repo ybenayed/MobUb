@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.*
@@ -27,15 +28,18 @@ fun SearchBar(
     suggestions: List<SearchResultDto>,
     onQueryChange: (String) -> Unit,
     onSuggestionSelected: (SearchResultDto) -> Unit,
+    onOpenItinerary: () -> Unit = {}, // <-- ouvre le panneau itinéraire (bottom sheet)
     modifier: Modifier = Modifier
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     var translatedPlaceholder by remember { mutableStateOf("Rechercher un lieu...") }
     var translatedSearchDesc by remember { mutableStateOf("Rechercher") }
+    var translatedItineraryDesc by remember { mutableStateOf("Itinéraire") }
 
     LaunchedEffect(currentLanguage) {
         translatedPlaceholder = languageViewModel.translate("Rechercher un lieu...")
         translatedSearchDesc = languageViewModel.translate("Rechercher")
+        translatedItineraryDesc = languageViewModel.translate("Itinéraire")
     }
 
     Column(
@@ -54,6 +58,11 @@ fun SearchBar(
                 placeholder = { Text(translatedPlaceholder) },
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Search, contentDescription = translatedSearchDesc)
+                },
+                trailingIcon = {
+                    IconButton(onClick = onOpenItinerary) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = translatedItineraryDesc)
+                    }
                 },
                 singleLine = true,
                 shape = RoundedCornerShape(24.dp),
