@@ -1,6 +1,8 @@
 package com.smartcampus.backend.controller.search;
 
+import com.smartcampus.backend.dto.search.ItineraryOptionDTO;
 import com.smartcampus.backend.dto.search.ItineraryRequestDTO;
+import com.smartcampus.backend.service.search.OtpItineraryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -9,15 +11,23 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("/api") // <-- 1. Ajout de l'URL racine /api
+@RequestMapping("/api")
 public class ItineraryController {
 
     private static final Logger log = LoggerFactory.getLogger(ItineraryController.class);
 
-    @PostMapping("/itinerary") // <-- 2. Ajout du / au début
-    public ResponseEntity<Void> receiveItinerary(@RequestBody ItineraryRequestDTO request) {
-        log.info("=== Nouvel itinéraire reçu ===");
+    private final OtpItineraryService otpItineraryService;
+
+    public ItineraryController(OtpItineraryService otpItineraryService) {
+        this.otpItineraryService = otpItineraryService;
+    }
+
+    @PostMapping("/itinerary")
+    public ResponseEntity<List<ItineraryOptionDTO>> computeItinerary(@RequestBody ItineraryRequestDTO request) {
+        log.info("=== Calcul d'itineraire ===");
         log.info("Origine      : {} | lat={} lon={}",
                 request.getOrigin().getName(),
                 request.getOrigin().getLatitude(),
@@ -27,6 +37,15 @@ public class ItineraryController {
                 request.getDestination().getLatitude(),
                 request.getDestination().getLongitude());
 
-        return ResponseEntity.ok().build();
+        List<ItineraryOptionDTO> itineraries = otpItineraryService.computeItinerary(request);
+
+        if (itineraries.isEmpty()) {
+            log.warn("Aucun itineraire trouve entre {} et {}",
+                    request.getOrigin().getName(), request.getDestination().getName());
+            return ResponseEntity.noContent().build();
+        }
+
+        log.info("{} itineraire(s) trouve(s)", itineraries.size());
+        return ResponseEntity.ok(itineraries);
     }
 }

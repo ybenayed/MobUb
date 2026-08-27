@@ -3,6 +3,7 @@ package com.ObservatoireCampus.mobile.viewmodel.itinerary
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ObservatoireCampus.mobile.model.search.ItineraryOptionDto
 import com.ObservatoireCampus.mobile.model.search.SearchResultDto
 import com.ObservatoireCampus.mobile.repository.ItineraryRepository
 import com.ObservatoireCampus.mobile.repository.SearchRepository
@@ -53,6 +54,19 @@ class ItineraryViewModel : ViewModel() {
 
     private var originJob: Job? = null
     private var destinationJob: Job? = null
+
+    // ---------- RÉSULTATS DE RECHERCHE ----------
+    private val _itineraryOptions = MutableStateFlow<List<ItineraryOptionDto>>(emptyList())
+    val itineraryOptions: StateFlow<List<ItineraryOptionDto>> = _itineraryOptions.asStateFlow()
+
+    private val _selectedItinerary = MutableStateFlow<ItineraryOptionDto?>(null)
+    val selectedItinerary: StateFlow<ItineraryOptionDto?> = _selectedItinerary.asStateFlow()
+
+    private val _isSearching = MutableStateFlow(false)
+    val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
+
+    private val _searchError = MutableStateFlow<String?>(null)
+    val searchError: StateFlow<String?> = _searchError.asStateFlow()
 
     // ----- Origine -----
     fun onOriginQueryChanged(newQuery: String) {
@@ -133,8 +147,8 @@ class ItineraryViewModel : ViewModel() {
     }
 
     /**
-     * Envoie l'origine + la destination au backend (POST /api/itinerary).
-     * Pour l'instant le backend se contente de logguer les 2 points dans sa console.
+     * Envoie l'origine + la destination au backend (POST /api/itinerary)
+     * et stocke les options d'itinéraire reçues dans _itineraryOptions.
      * Ne fait rien si l'un des 2 points n'est pas encore choisi.
      */
     fun submitItinerary() {
@@ -148,14 +162,38 @@ class ItineraryViewModel : ViewModel() {
 
         Log.d(TAG, "Envoi vers le backend -> origin=$origin destination=$destination")
 
+        _itineraryOptions.value = emptyList()
+        _selectedItinerary.value = null
+        _searchError.value = null
+
         viewModelScope.launch {
+            _isSearching.value = true
             try {
-                itineraryRepository.sendItinerary(origin, destination)
-                Log.d(TAG, "Itinéraire envoyé avec succès au backend")
+                val options = itineraryRepository.computeItinerary(origin, destination)
+                _itineraryOptions.value = options
+                if (options.isEmpty()) {
+                    _searchError.value = "Aucun itinéraire trouvé"
+                }
+                Log.d(TAG, "${options.size} itinéraire(s) reçu(s) du backend")
             } catch (e: Exception) {
-                Log.e(TAG, "Échec de l'envoi de l'itinéraire au backend", e)
+                Log.e(TAG, "Échec du calcul d'itinéraire", e)
+                _searchError.value = "Erreur réseau, réessayez"
+            } finally {
+                _isSearching.value = false
             }
         }
+    }
+
+    /** Appelé quand l'utilisateur choisit une option dans ItineraryResultsList. */
+    fun selectItinerary(option: ItineraryOptionDto) {
+        _selectedItinerary.value = option
+    }
+
+    /** Efface les résultats de recherche (sans toucher aux champs origine/destination). */
+    fun clearResults() {
+        _itineraryOptions.value = emptyList()
+        _selectedItinerary.value = null
+        _searchError.value = null
     }
 
     /** Réinitialise le panneau après une recherche réussie ou une fermeture. */
@@ -168,5 +206,6 @@ class ItineraryViewModel : ViewModel() {
         _destinationQuery.value = ""
         _destinationSuggestions.value = emptyList()
         _destinationPoint.value = null
+        clearResults()
     }
 }

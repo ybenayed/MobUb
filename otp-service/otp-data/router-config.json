@@ -2,5 +2,14 @@
   "routingDefaults": {
     "walkSpeed": 1.3,
     "bikeSpeed": 4.0
-  }
+  },
+  "updaters": [
+    {
+      "type": "vehicle-rental",
+      "network": "vcub",
+      "sourceType": "gbfs",
+      "url": "https://bdx.mecatran.com/utw/ws/gbfs/bordeaux/v3/gbfs.json?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt",
+      "frequencySec": 60
+    }
+  ]
 }

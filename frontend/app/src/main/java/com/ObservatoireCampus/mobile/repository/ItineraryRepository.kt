@@ -1,18 +1,21 @@
+// repository/ItineraryRepository.kt
 package com.ObservatoireCampus.mobile.repository
 
+import com.ObservatoireCampus.mobile.model.search.ItineraryOptionDto
 import com.ObservatoireCampus.mobile.model.search.ItineraryRequestDto
 import com.ObservatoireCampus.mobile.model.search.SearchResultDto
 import com.ObservatoireCampus.mobile.network.RetrofitClient
 
-/**
- * Couche repository standard (même rôle que SearchRepository) :
- * fait l'intermédiaire entre ItineraryViewModel et Retrofit.
- */
 class ItineraryRepository {
 
-    suspend fun sendItinerary(origin: SearchResultDto, destination: SearchResultDto) {
-        RetrofitClient.itineraryApi.sendItinerary(
+    /** Liste vide si 204 (rien trouvé) ou erreur HTTP/réseau. */
+    suspend fun computeItinerary(
+        origin: SearchResultDto,
+        destination: SearchResultDto
+    ): List<ItineraryOptionDto> {
+        val response = RetrofitClient.itineraryApi.computeItinerary(
             ItineraryRequestDto(origin = origin, destination = destination)
         )
+        return if (response.isSuccessful) response.body() ?: emptyList() else emptyList()
     }
 }
