@@ -24,5 +24,6 @@ object RetrofitClient {
     val geocodingApi: GeocodingApi by lazy { retrofit.create(GeocodingApi::class.java) }
 
     val itineraryApi: ItineraryApi by lazy { retrofit.create(ItineraryApi::class.java) }
+    val batimentApi: BatimentApi by lazy { retrofit.create(BatimentApi::class.java) }
 
 }

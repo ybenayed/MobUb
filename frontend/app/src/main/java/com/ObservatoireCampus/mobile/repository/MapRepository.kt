@@ -6,37 +6,74 @@ import com.google.gson.reflect.TypeToken
 import com.ObservatoireCampus.mobile.network.RetrofitClient
 import java.io.File
 import com.ObservatoireCampus.mobile.model.CampusDto
+import com.ObservatoireCampus.mobile.model.BatimentDto
+import com.ObservatoireCampus.mobile.model.InstitutionColorDto
 
 class MapRepository(private val context: Context) {
 
-    private val cacheFile = File(context.filesDir, "campus_cache.json")
+    private val campusCacheFile = File(context.filesDir, "campus_cache.json")
+    private val legendCacheFile = File(context.filesDir, "legend_cache.json")
     private val gson = Gson()
+
+    // Fichier de cache spécifique par campus pour éviter le remplacement du cache global
+    private fun getBatimentCacheFile(campusId: Long) = File(context.filesDir, "batiments_cache_$campusId.json")
 
     suspend fun getCampus(): List<CampusDto> {
         return try {
             val data = RetrofitClient.campusApi.getAllCampus()
-            saveToCache(data)
+            saveToCache(campusCacheFile, data)
             data
         } catch (e: Exception) {
-            loadFromCache() ?: throw e
+            loadCampusCache() ?: throw e
         }
     }
 
-    private fun saveToCache(data: List<CampusDto>) {
-        try {
-            cacheFile.writeText(gson.toJson(data))
+    suspend fun getBatiments(campusId: Long): List<BatimentDto> {
+        val cacheFile = getBatimentCacheFile(campusId)
+        return try {
+            val data = RetrofitClient.batimentApi.getBatimentsByCampus(campusId)
+            saveToCache(cacheFile, data)
+            data
         } catch (e: Exception) {
-            // log si besoin, mais ne pas bloquer l'app pour une erreur de cache
+            loadBatimentsCache(cacheFile) ?: throw e
         }
     }
 
-    private fun loadFromCache(): List<CampusDto>? {
-        if (!cacheFile.exists()) return null
+    suspend fun getInstitutionColors(): List<InstitutionColorDto> {
+        return try {
+            val data = RetrofitClient.campusApi.getInstitutionColors()
+            saveToCache(legendCacheFile, data)
+            data
+        } catch (e: Exception) {
+            loadLegendCache() ?: throw e
+        }
+    }
+
+    private fun <T> saveToCache(file: File, data: List<T>) {
+        try { file.writeText(gson.toJson(data)) } catch (_: Exception) {}
+    }
+
+    private fun loadCampusCache(): List<CampusDto>? {
+        if (!campusCacheFile.exists()) return null
         return try {
             val type = object : TypeToken<List<CampusDto>>() {}.type
-            gson.fromJson(cacheFile.readText(), type)
-        } catch (e: Exception) {
-            null
-        }
+            gson.fromJson(campusCacheFile.readText(), type)
+        } catch (_: Exception) { null }
+    }
+
+    private fun loadBatimentsCache(file: File): List<BatimentDto>? {
+        if (!file.exists()) return null
+        return try {
+            val type = object : TypeToken<List<BatimentDto>>() {}.type
+            gson.fromJson(file.readText(), type)
+        } catch (_: Exception) { null }
+    }
+
+    private fun loadLegendCache(): List<InstitutionColorDto>? {
+        if (!legendCacheFile.exists()) return null
+        return try {
+            val type = object : TypeToken<List<InstitutionColorDto>>() {}.type
+            gson.fromJson(legendCacheFile.readText(), type)
+        } catch (_: Exception) { null }
     }
 }

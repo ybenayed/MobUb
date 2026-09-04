@@ -17,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ObservatoireCampus.mobile.model.CampusDto
+import com.ObservatoireCampus.mobile.model.BatimentDto
 import com.ObservatoireCampus.mobile.model.freevehicle.FreeVehiclePositionDto
 import com.ObservatoireCampus.mobile.model.parking.ParkingPositionDto
 import com.ObservatoireCampus.mobile.model.station.StationTBPositionDto
@@ -38,19 +39,13 @@ import org.osmdroid.views.overlay.infowindow.InfoWindow
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.views.overlay.MapEventsOverlay
 
-/**
- * Carte OpenStreetMap. Dessine les polygones des campus reçus,
- * les marqueurs de parking, bus/tram, vélo et TER (filtrés par layers actifs,
- * passés déjà filtrés par MapScreen).
- * onMapReady renvoie l'instance MapView au parent (MapScreen) pour
- * pouvoir piloter le zoom et les déplacements depuis l'extérieur.
- */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun CampusMap(
     campusList: List<CampusDto>,
     showPolygons: Boolean,
     languageViewModel: LanguageViewModel,
+    batimentList: List<BatimentDto> = emptyList(),
     parkingList: List<ParkingPositionDto> = emptyList(),
     onParkingClick: (ParkingPositionDto) -> Unit = {},
     stationTBList: List<StationTBPositionDto> = emptyList(),
@@ -65,19 +60,14 @@ fun CampusMap(
     modifier: Modifier = Modifier
 ) {
     val mapViewRef = remember { mutableStateOf<MapView?>(null) }
-    // Utilisation d'un CoroutineScope Compose officiel et sécurisé
     val coroutineScope = rememberCoroutineScope()
 
-    // On s'assure de repeindre correctement dès que le contenu ou la langue change
     LaunchedEffect(
-        campusList, showPolygons, parkingList, stationTBList, stationVList, stationTerList, freeVehicleList, languageViewModel
+        campusList, batimentList, showPolygons, parkingList, stationTBList, stationVList, stationTerList, freeVehicleList, languageViewModel
     ) {
         val mapView = mapViewRef.value ?: return@LaunchedEffect
         mapView.overlays.clear()
 
-        // Ferme toute bulle ouverte (ex: résultat de recherche) quand on clique
-        // sur une zone vide de la carte. Ajouté en premier : les overlays ajoutés
-        // après (marqueurs, polygones) auront priorité pour intercepter leurs propres clics.
         mapView.overlays.add(
             MapEventsOverlay(object : MapEventsReceiver {
                 override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
@@ -88,10 +78,15 @@ fun CampusMap(
             })
         )
 
-        // Redessine l'ensemble avec les nouveaux titres traduits
-        if (showPolygons && campusList.isNotEmpty()) {
-            drawCampusPolygons(mapView, campusList)
+        if (showPolygons) {
+            if (campusList.isNotEmpty()) {
+                drawCampusPolygons(mapView, campusList)
+            }
+            if (batimentList.isNotEmpty()) {
+                drawBatimentPolygons(mapView, batimentList)
+            }
         }
+
         drawParkingMarkers(mapView, parkingList, languageViewModel, coroutineScope, onParkingClick)
         drawStationTBMarkers(mapView, stationTBList, languageViewModel, coroutineScope, onStationTBClick)
         drawStationVMarkers(mapView, stationVList, languageViewModel, coroutineScope, onStationVClick)
@@ -120,32 +115,88 @@ fun CampusMap(
 }
 
 private fun drawCampusPolygons(mapView: MapView, campusList: List<CampusDto>) {
-    val fillColors = listOf(
-        0x882563eb.toInt(),
-        0x8816a34a.toInt(),
-        0x88dc2626.toInt()
-    )
-    val strokeColors = listOf(
-        0xFF2563eb.toInt(),
-        0xFF16a34a.toInt(),
-        0xFFdc2626.toInt()
-    )
-    campusList.forEachIndexed { index, campus ->
-        if (campus.polygonCoordinates.isEmpty()) return@forEachIndexed
-        val geoPoints = campus.polygonCoordinates.map { coord -> GeoPoint(coord[1], coord[0]) }
-        val polygon = Polygon(mapView).apply {
-            points = geoPoints
-            fillPaint.color = fillColors[index % fillColors.size]
-            outlinePaint.color = strokeColors[index % strokeColors.size]
-            outlinePaint.strokeWidth = 3f
-            title = campus.name
-            setOnClickListener { _, _, _ ->
-                showInfoWindow()
-                true
+    val fillColor = 0x332E7D32.toInt()   // Vert translucide
+    val strokeColor = 0xFF2E7D32.toInt() // Vert soutenu
+
+    campusList.forEach { campus ->
+        // Un campus en plusieurs blocs disjoints (MultiPolygon) a une entrée par bloc.
+        // On dessine CHAQUE partie comme un polygone séparé pour éviter la ligne
+        // parasite qui reliait les 2 blocs quand tout était mis à plat en un seul polygone.
+        campus.polygonCoordinates.forEach { part ->
+            if (part.size < 3) return@forEach
+            val geoPoints = part.map { coord -> GeoPoint(coord[1], coord[0]) }
+            val polygon = Polygon(mapView).apply {
+                points = geoPoints
+                fillPaint.color = fillColor
+                outlinePaint.color = strokeColor
+                outlinePaint.strokeWidth = 3f
+                title = campus.name
+                setOnClickListener { _, _, _ ->
+                    InfoWindow.closeAllInfoWindowsOn(mapView)
+                    showInfoWindow()
+                    true
+                }
             }
+            mapView.overlays.add(polygon)
         }
-        mapView.overlays.add(polygon)
     }
+}
+
+/**
+ * Dessine chaque bâtiment en se basant sur le helper Front-end `CampusEntity`
+ * pour déterminer la couleur du remplissage et applique un contour noir fin.
+ */
+// Pour les bâtiments :
+private fun drawBatimentPolygons(mapView: MapView, batimentList: List<BatimentDto>) {
+    batimentList.forEach { batiment ->
+        val fillColorHex = batiment.fillColor ?: "#EAF0D8"
+        val strokeColorHex = batiment.strokeColor ?: fillColorHex
+
+        val baseColorInt = try {
+            android.graphics.Color.parseColor(fillColorHex)
+        } catch (_: Exception) {
+            android.graphics.Color.parseColor("#EAF0D8")
+        }
+
+        val strokeColorInt = try {
+            android.graphics.Color.parseColor(strokeColorHex)
+        } catch (_: Exception) {
+            baseColorInt
+        }
+
+        val fillArgb = withAlpha(baseColorInt, alpha = 200)
+
+        // Un bâtiment en plusieurs blocs disjoints a une entrée par bloc dans
+        // polygonCoordinates : on dessine chaque bloc, pas seulement le premier.
+        batiment.polygonCoordinates.forEach { outerRing ->
+            if (outerRing.size < 3) return@forEach
+
+            // coord[0] = longitude, coord[1] = latitude
+            val geoPoints = outerRing.map { coord -> GeoPoint(coord[1], coord[0]) }
+
+            val polygon = Polygon(mapView).apply {
+                points = geoPoints
+                fillPaint.color = fillArgb
+                outlinePaint.color = strokeColorInt
+                outlinePaint.strokeWidth = 3f
+                title = batiment.name
+                snippet = batiment.appartenance ?: ""
+
+                infoWindow = CustomInfoWindow(mapView, strokeColorInt)
+
+                setOnClickListener { _, _, _ ->
+                    InfoWindow.closeAllInfoWindowsOn(mapView)
+                    showInfoWindow()
+                    true
+                }
+            }
+            mapView.overlays.add(polygon)
+        }
+    }
+}
+
+private fun withAlpha(colorArgb: Int, alpha: Int): Int {
+    return (colorArgb and 0x00FFFFFF) or (alpha shl 24)
 }
 
 private fun drawParkingMarkers(
@@ -164,7 +215,7 @@ private fun drawParkingMarkers(
         val marker = Marker(mapView).apply {
             position = GeoPoint(lat, lon)
             title = parking.nom
-            snippet = parking.taType // Valeur par défaut temporaire
+            snippet = parking.taType
 
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER)
             icon = createMarkerIcon(
@@ -175,7 +226,6 @@ private fun drawParkingMarkers(
             setOnMarkerClickListener { _, _ -> onClick(parking); true }
         }
 
-        // Lancement asynchrone de la traduction via le scope Compose transmis
         coroutineScope.launch {
             val translatedLabel = ParkingTypeStyle.label(parking.taType, languageViewModel)
             marker.snippet = translatedLabel

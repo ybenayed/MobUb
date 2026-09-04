@@ -5,8 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OtpDataRawDTO {
-    private OtpPlanRawDTO plan;
+    private OtpPlanConnectionRawDTO planConnection;
 
-    public OtpPlanRawDTO getPlan() { return plan; }
-    public void setPlan(OtpPlanRawDTO plan) { this.plan = plan; }
+    public OtpPlanConnectionRawDTO getPlanConnection() { return planConnection; }
+    public void setPlanConnection(OtpPlanConnectionRawDTO planConnection) { this.planConnection = planConnection; }
 }

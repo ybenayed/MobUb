@@ -20,8 +20,11 @@ public class CampusDTO {
 
     private Double perimeterMeters;
 
-    // GeoJSON-style : liste de [lng, lat] pour le front (Leaflet / Mapbox)
-    private List<double[]> polygonCoordinates;
+    // GeoJSON-style : liste de PARTIES, chaque partie étant une liste de [lng, lat].
+    // Un campus en une seule pièce a une seule partie ; un campus en plusieurs blocs
+    // disjoints (MultiPolygon) a une entrée par bloc, pour que le front les dessine
+    // séparément au lieu de tracer une ligne parasite entre les deux.
+    private List<List<double[]>> polygonCoordinates;
 
     private LocalDateTime importedAt;
 }

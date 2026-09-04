@@ -3,21 +3,28 @@ package com.ObservatoireCampus.mobile.viewmodel.itinerary
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ObservatoireCampus.mobile.model.search.ItineraryFilters
 import com.ObservatoireCampus.mobile.model.search.ItineraryOptionDto
+import com.ObservatoireCampus.mobile.model.search.ItinerarySortOption
 import com.ObservatoireCampus.mobile.model.search.SearchResultDto
+import com.ObservatoireCampus.mobile.model.search.TransportModeUi
+import com.ObservatoireCampus.mobile.model.search.sortedByOption
 import com.ObservatoireCampus.mobile.repository.ItineraryRepository
 import com.ObservatoireCampus.mobile.repository.SearchRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 private const val TAG = "ItineraryViewModel"
 
 /**
- * Gère les 2 champs (origine / destination) du panneau "Itinéraire".
+ * Gere les 2 champs (origine / destination) + les filtres du panneau "Itineraire".
  * Comme SearchViewModel, passe toujours par le backend via SearchRepository
  * (jamais d'appel Nominatim direct depuis l'app).
  */
@@ -55,9 +62,26 @@ class ItineraryViewModel : ViewModel() {
     private var originJob: Job? = null
     private var destinationJob: Job? = null
 
-    // ---------- RÉSULTATS DE RECHERCHE ----------
+    // ---------- FILTRES ----------
+    private val _filters = MutableStateFlow(ItineraryFilters())
+    val filters: StateFlow<ItineraryFilters> = _filters.asStateFlow()
+
+    // ---------- RESULTATS DE RECHERCHE ----------
+    // Contient TOUJOURS la liste complete et brute renvoyee par le backend
+    // (aucune troncature : voir MAX_ITINERARIES_REQUESTED cote backend, qui est
+    // un plafond de *demande* a OTP, pas un filtre de reponse).
     private val _itineraryOptions = MutableStateFlow<List<ItineraryOptionDto>>(emptyList())
     val itineraryOptions: StateFlow<List<ItineraryOptionDto>> = _itineraryOptions.asStateFlow()
+
+    /**
+     * Options triees selon filters.sortBy, recalculees automatiquement des que
+     * les resultats OU le tri choisi changent. Aucun appel reseau ici : c'est
+     * exactement ce qui alimente la liste deroulante de propositions dans l'UI.
+     */
+    val sortedItineraryOptions: StateFlow<List<ItineraryOptionDto>> =
+        combine(_itineraryOptions, _filters) { options, filters ->
+            options.sortedByOption(filters.sortBy)
+        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _selectedItinerary = MutableStateFlow<ItineraryOptionDto?>(null)
     val selectedItinerary: StateFlow<ItineraryOptionDto?> = _selectedItinerary.asStateFlow()
@@ -71,7 +95,7 @@ class ItineraryViewModel : ViewModel() {
     // ----- Origine -----
     fun onOriginQueryChanged(newQuery: String) {
         _originQuery.value = newQuery
-        _originPoint.value = null // toute frappe manuelle invalide la sélection précédente
+        _originPoint.value = null // toute frappe manuelle invalide la selection precedente
         originJob?.cancel()
 
         if (newQuery.isBlank() || newQuery.length < 3) {
@@ -99,7 +123,7 @@ class ItineraryViewModel : ViewModel() {
         _originSuggestions.value = emptyList()
     }
 
-    /** Appelé par le bouton "cible" 🎯 du champ origine. */
+    /** Appele par le bouton "cible" du champ origine. */
     fun setOriginToMyLocation(latitude: Double, longitude: Double, label: String = "Ma position") {
         originJob?.cancel()
         _originPoint.value = SearchResultDto(name = label, latitude = latitude, longitude = longitude, subtitle = "")
@@ -138,7 +162,7 @@ class ItineraryViewModel : ViewModel() {
         _destinationSuggestions.value = emptyList()
     }
 
-    /** Appelé par le bouton "cible" 🎯 du champ destination. */
+    /** Appele par le bouton "cible" du champ destination. */
     fun setDestinationToMyLocation(latitude: Double, longitude: Double, label: String = "Ma position") {
         destinationJob?.cancel()
         _destinationPoint.value = SearchResultDto(name = label, latitude = latitude, longitude = longitude, subtitle = "")
@@ -146,21 +170,52 @@ class ItineraryViewModel : ViewModel() {
         _destinationSuggestions.value = emptyList()
     }
 
+    // ----- Filtres -----
+
+    /** Active/desactive un mode de transport. Refuse de vider entierement la selection. */
+    fun toggleMode(mode: TransportModeUi) {
+        val current = _filters.value.modes
+        val updated = if (mode in current) current - mode else current + mode
+        if (updated.isNotEmpty()) {
+            _filters.value = _filters.value.copy(modes = updated)
+        }
+    }
+
+    /** date/time null = "maintenant". arriveBy=true -> "je veux arriver a". */
+    fun updateTimeFilter(date: String?, time: String?, arriveBy: Boolean) {
+        _filters.value = _filters.value.copy(date = date, time = time, arriveBy = arriveBy)
+    }
+
+    fun toggleWheelchair() {
+        _filters.value = _filters.value.copy(wheelchair = !_filters.value.wheelchair)
+    }
+
+    fun updateSortOption(option: ItinerarySortOption) {
+        _filters.value = _filters.value.copy(sortBy = option)
+    }
+
+    /** Remet les filtres a leur valeur par defaut (sans toucher origine/destination). */
+    fun resetFilters() {
+        _filters.value = ItineraryFilters()
+    }
+
+    // ----- Recherche -----
+
     /**
-     * Envoie l'origine + la destination au backend (POST /api/itinerary)
-     * et stocke les options d'itinéraire reçues dans _itineraryOptions.
-     * Ne fait rien si l'un des 2 points n'est pas encore choisi.
+     * Envoie origine + destination + filtres courants au backend et stocke les
+     * options recues dans _itineraryOptions.
      */
     fun submitItinerary() {
         val origin = _originPoint.value
         val destination = _destinationPoint.value
 
         if (origin == null || destination == null) {
-            Log.w(TAG, "submitItinerary() annulé : origin=$origin destination=$destination")
+            Log.w(TAG, "submitItinerary() annule : origin=$origin destination=$destination")
             return
         }
 
-        Log.d(TAG, "Envoi vers le backend -> origin=$origin destination=$destination")
+        val currentFilters = _filters.value
+        Log.d(TAG, "Envoi vers le backend -> origin=$origin destination=$destination filters=$currentFilters")
 
         _itineraryOptions.value = emptyList()
         _selectedItinerary.value = null
@@ -169,34 +224,44 @@ class ItineraryViewModel : ViewModel() {
         viewModelScope.launch {
             _isSearching.value = true
             try {
-                val options = itineraryRepository.computeItinerary(origin, destination)
+                val options = when {
+                    currentFilters.wheelchair ->
+                        itineraryRepository.computeAccessibleItinerary(origin, destination, currentFilters)
+
+                    currentFilters.isPersonalBikeOnly ->
+                        itineraryRepository.computeBicycleItineraries(origin, destination, currentFilters)
+
+                    else ->
+                        itineraryRepository.computeItinerary(origin, destination, currentFilters)
+                }
+
                 _itineraryOptions.value = options
                 if (options.isEmpty()) {
-                    _searchError.value = "Aucun itinéraire trouvé"
+                    _searchError.value = "Aucun itineraire trouve"
                 }
-                Log.d(TAG, "${options.size} itinéraire(s) reçu(s) du backend")
+                Log.d(TAG, "${options.size} itineraire(s) recu(s) du backend")
             } catch (e: Exception) {
-                Log.e(TAG, "Échec du calcul d'itinéraire", e)
-                _searchError.value = "Erreur réseau, réessayez"
+                Log.e(TAG, "Echec du calcul d'itineraire", e)
+                _searchError.value = "Erreur reseau, reessayez"
             } finally {
                 _isSearching.value = false
             }
         }
     }
 
-    /** Appelé quand l'utilisateur choisit une option dans ItineraryResultsList. */
+    /** Appele quand l'utilisateur choisit une option dans ItineraryResultsList. */
     fun selectItinerary(option: ItineraryOptionDto) {
         _selectedItinerary.value = option
     }
 
-    /** Efface les résultats de recherche (sans toucher aux champs origine/destination). */
+    /** Efface les resultats de recherche (sans toucher aux champs origine/destination/filtres). */
     fun clearResults() {
         _itineraryOptions.value = emptyList()
         _selectedItinerary.value = null
         _searchError.value = null
     }
 
-    /** Réinitialise le panneau après une recherche réussie ou une fermeture. */
+    /** Reinitialise tout le panneau (origine, destination, filtres, resultats). */
     fun reset() {
         originJob?.cancel()
         destinationJob?.cancel()
@@ -206,6 +271,12 @@ class ItineraryViewModel : ViewModel() {
         _destinationQuery.value = ""
         _destinationSuggestions.value = emptyList()
         _destinationPoint.value = null
+        resetFilters()
         clearResults()
+    }
+
+    /** Alias appele par `onResetClick` dans l'interface Composable. */
+    fun resetAllFields() {
+        reset()
     }
 }

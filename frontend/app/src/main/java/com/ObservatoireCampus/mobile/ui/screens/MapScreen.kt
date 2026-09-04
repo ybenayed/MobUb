@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,7 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -25,6 +26,7 @@ import com.ObservatoireCampus.mobile.repository.station.StationTBRepository
 import com.ObservatoireCampus.mobile.repository.station.StationVRepository
 import com.ObservatoireCampus.mobile.repository.station.StationTerRepository
 import com.ObservatoireCampus.mobile.ui.components.CampusButton
+import com.ObservatoireCampus.mobile.ui.components.CampusLegend
 import com.ObservatoireCampus.mobile.ui.components.LocationButton
 import com.ObservatoireCampus.mobile.ui.components.CampusMap
 import com.ObservatoireCampus.mobile.ui.components.DrawerMenu
@@ -80,8 +82,20 @@ import com.ObservatoireCampus.mobile.viewmodel.itinerary.ItineraryViewModel
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import org.osmdroid.util.BoundingBox
+// Layout & Alignement
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 
-/** Indique quel champ du panneau itinéraire attend la position GPS de l'utilisateur. */
+// Material 3 UI & Icônes
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Text
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.List
+
+/** Indique quel champ du panneau itineraire attend la position GPS de l'utilisateur. */
 private enum class ItineraryLocationTarget { ORIGIN, DESTINATION }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -93,7 +107,10 @@ fun MapScreen(
     onInternshipClick: () -> Unit = {}
 ) {
     val campusList by viewModel.campusList.collectAsState()
+    val batimentList by viewModel.batimentList.collectAsState()
+    val legendList by viewModel.legendList.collectAsState()
     val campusError by viewModel.error.collectAsState()
+    var showLegendBottomSheet by remember { mutableStateOf(false) }
 
     val parkingViewModel: ParkingViewModel = viewModel(
         factory = ParkingViewModelFactory(ParkingRepository())
@@ -163,10 +180,10 @@ fun MapScreen(
     val locationAccuracy by locationViewModel.accuracyMeters.collectAsState()
     val locationState by locationViewModel.locationState.collectAsState()
 
-    // Permission de localisation pour les boutons "cible" 🎯 du panneau itinéraire
+    // Permission de localisation pour les boutons "cible" du panneau itineraire
     var pendingLocationTarget by remember { mutableStateOf<ItineraryLocationTarget?>(null) }
 
-    // ---------- ITINÉRAIRE (ViewModel déclaré AVANT tout collectAsState qui en dépend) ----------
+    // ---------- ITINERAIRE ----------
     val itineraryViewModel: ItineraryViewModel = viewModel()
     val originQuery by itineraryViewModel.originQuery.collectAsState()
     val originSuggestions by itineraryViewModel.originSuggestions.collectAsState()
@@ -174,7 +191,8 @@ fun MapScreen(
     val destinationQuery by itineraryViewModel.destinationQuery.collectAsState()
     val destinationSuggestions by itineraryViewModel.destinationSuggestions.collectAsState()
     val destinationPoint by itineraryViewModel.destinationPoint.collectAsState()
-    val itineraryOptions by itineraryViewModel.itineraryOptions.collectAsState()
+    val sortedItineraryOptions by itineraryViewModel.sortedItineraryOptions.collectAsState()
+    val itineraryFilters by itineraryViewModel.filters.collectAsState()
     val selectedItinerary by itineraryViewModel.selectedItinerary.collectAsState()
     val isSearchingItinerary by itineraryViewModel.isSearching.collectAsState()
     val itinerarySearchError by itineraryViewModel.searchError.collectAsState()
@@ -308,7 +326,7 @@ fun MapScreen(
         }
     }
 
-    // Dessine / efface le tracé dès qu'une option d'itinéraire est sélectionnée.
+    // Dessine / efface le trace des qu'une option d'itineraire est selectionnee.
     LaunchedEffect(selectedItinerary, mapView) {
         val mp = mapView ?: return@LaunchedEffect
         clearItineraryRoute(mp, itineraryRoutePolylines)
@@ -382,6 +400,7 @@ fun MapScreen(
                     campusList = displayedCampusList,
                     showPolygons = showCampus,
                     languageViewModel = languageViewModel,
+                    batimentList = batimentList,
                     parkingList = visibleParking,
                     onParkingClick = { parkingViewModel.onParkingClicked(it.id) },
                     stationTBList = visibleStationsTB,
@@ -455,90 +474,120 @@ fun MapScreen(
                     },
                     sheetState = itinerarySheetState
                 ) {
-                    ItinerarySearchPanel(
-                        originQuery = originQuery,
-                        originSuggestions = originSuggestions,
-                        onOriginQueryChange = { itineraryViewModel.onOriginQueryChanged(it) },
-                        onOriginSuggestionSelected = { itineraryViewModel.selectOrigin(it) },
-                        onUseMyLocationAsOrigin = {
-                            requestLocationForItinerary(ItineraryLocationTarget.ORIGIN)
-                        },
-                        destinationQuery = destinationQuery,
-                        destinationSuggestions = destinationSuggestions,
-                        onDestinationQueryChange = { itineraryViewModel.onDestinationQueryChanged(it) },
-                        onDestinationSuggestionSelected = { itineraryViewModel.selectDestination(it) },
-                        onUseMyLocationAsDestination = {
-                            requestLocationForItinerary(ItineraryLocationTarget.DESTINATION)
-                        },
-                        canSearch = originPoint != null && destinationPoint != null,
-                        onSearchClick = {
-                            val origin = originPoint
-                            val destination = destinationPoint
-                            if (origin != null && destination != null) {
-                                mapView?.let { mp ->
-                                    val originGeoPoint = GeoPoint(origin.latitude, origin.longitude)
-                                    val destinationGeoPoint = GeoPoint(destination.latitude, destination.longitude)
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        ItinerarySearchPanel(
+                            originQuery = originQuery,
+                            originSuggestions = originSuggestions,
+                            onOriginQueryChange = { itineraryViewModel.onOriginQueryChanged(it) },
+                            onOriginSuggestionSelected = { itineraryViewModel.selectOrigin(it) },
+                            onUseMyLocationAsOrigin = {
+                                requestLocationForItinerary(ItineraryLocationTarget.ORIGIN)
+                            },
+                            destinationQuery = destinationQuery,
+                            destinationSuggestions = destinationSuggestions,
+                            onDestinationQueryChange = { itineraryViewModel.onDestinationQueryChanged(it) },
+                            onDestinationSuggestionSelected = { itineraryViewModel.selectDestination(it) },
+                            onUseMyLocationAsDestination = {
+                                requestLocationForItinerary(ItineraryLocationTarget.DESTINATION)
+                            },
+                            filters = itineraryFilters,
+                            onModeToggle = itineraryViewModel::toggleMode,
+                            onTimeChange = itineraryViewModel::updateTimeFilter,
+                            onWheelchairToggle = itineraryViewModel::toggleWheelchair,
+                            onSortChange = itineraryViewModel::updateSortOption,
+                            canSearch = originPoint != null && destinationPoint != null,
+                            onSearchClick = {
+                                val origin = originPoint
+                                val destination = destinationPoint
+                                if (origin != null && destination != null) {
+                                    mapView?.let { mp ->
+                                        val originGeoPoint = GeoPoint(origin.latitude, origin.longitude)
+                                        val destinationGeoPoint = GeoPoint(destination.latitude, destination.longitude)
 
+                                        itineraryOriginMarker?.let { mp.overlays.remove(it) }
+                                        itineraryDestinationMarker?.let { mp.overlays.remove(it) }
+
+                                        val newOriginMarker = Marker(mp).apply {
+                                            position = originGeoPoint
+                                            title = origin.name
+                                            snippet = origin.subtitle
+                                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                            icon = createOriginMarkerIcon(mp.context)
+                                            infoWindow = SearchResultInfoWindow(mp)
+                                        }
+                                        val newDestinationMarker = Marker(mp).apply {
+                                            position = destinationGeoPoint
+                                            title = destination.name
+                                            snippet = destination.subtitle
+                                            setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                                            icon = createSearchResultMarkerIcon(mp.context)
+                                            infoWindow = SearchResultInfoWindow(mp)
+                                        }
+
+                                        mp.overlays.add(newOriginMarker)
+                                        mp.overlays.add(newDestinationMarker)
+                                        itineraryOriginMarker = newOriginMarker
+                                        itineraryDestinationMarker = newDestinationMarker
+
+                                        val boundingBox = BoundingBox.fromGeoPoints(
+                                            listOf(originGeoPoint, destinationGeoPoint)
+                                        )
+                                        mp.zoomToBoundingBox(boundingBox, true, 100)
+                                        mp.invalidate()
+                                    }
+                                }
+
+                                itineraryViewModel.submitItinerary()
+                            },
+                            onResetClick = {
+                                mapView?.let { mp ->
                                     itineraryOriginMarker?.let { mp.overlays.remove(it) }
                                     itineraryDestinationMarker?.let { mp.overlays.remove(it) }
-
-                                    val newOriginMarker = Marker(mp).apply {
-                                        position = originGeoPoint
-                                        title = origin.name
-                                        snippet = origin.subtitle
-                                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                        icon = createOriginMarkerIcon(mp.context)
-                                        infoWindow = SearchResultInfoWindow(mp)
-                                    }
-                                    val newDestinationMarker = Marker(mp).apply {
-                                        position = destinationGeoPoint
-                                        title = destination.name
-                                        snippet = destination.subtitle
-                                        setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
-                                        icon = createSearchResultMarkerIcon(mp.context)
-                                        infoWindow = SearchResultInfoWindow(mp)
-                                    }
-
-                                    mp.overlays.add(newOriginMarker)
-                                    mp.overlays.add(newDestinationMarker)
-                                    itineraryOriginMarker = newOriginMarker
-                                    itineraryDestinationMarker = newDestinationMarker
-
-                                    val boundingBox = BoundingBox.fromGeoPoints(
-                                        listOf(originGeoPoint, destinationGeoPoint)
-                                    )
-                                    mp.zoomToBoundingBox(boundingBox, true, 100)
+                                    itineraryOriginMarker = null
+                                    itineraryDestinationMarker = null
                                     mp.invalidate()
                                 }
-                            }
+                                itineraryViewModel.resetAllFields()
+                            },
+                            languageViewModel = languageViewModel,
+                            modifier = Modifier.fillMaxWidth()
+                        )
 
-                            // Lance le calcul d'itinéraire ; le panneau reste ouvert
-                            // pour afficher la liste des résultats juste en dessous.
-                            itineraryViewModel.submitItinerary()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-
-                    ItineraryResultsList(
-                        options = itineraryOptions,
-                        selectedItinerary = selectedItinerary,
-                        onOptionSelected = {
-                            itineraryViewModel.selectItinerary(it)
-                            showItineraryPanel = false
-                        },
-                        isLoading = isSearchingItinerary,
-                        errorMessage = itinerarySearchError
-                    )
+                        ItineraryResultsList(
+                            options = sortedItineraryOptions,
+                            selectedItinerary = selectedItinerary,
+                            onOptionSelected = {
+                                itineraryViewModel.selectItinerary(it)
+                                showItineraryPanel = false
+                            },
+                            isLoading = isSearchingItinerary,
+                            errorMessage = itinerarySearchError,
+                            languageViewModel = languageViewModel
+                        )
+                    }
                 }
             }
 
             CampusButton(
                 languageViewModel = languageViewModel,
-                onClick = { showCampus = !showCampus },
+                onClick = {
+                    showCampus = !showCampus
+                    // S'il est activé, on zoom et on centre automatiquement
+                    if (showCampus) {
+                        displayedCampusList.firstOrNull()?.let { campus ->
+                            mapView?.controller?.apply {
+                                setZoom(16.0) // Ajuste le zoom selon la précision souhaitée
+                                animateTo(GeoPoint(campus.centerLat, campus.centerLng))
+                            }
+                        }
+                    }
+                },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 6.dp, end = 10.dp)
             )
+
+
 
             LocationButton(
                 viewModel = locationViewModel,
@@ -549,13 +598,39 @@ fun MapScreen(
                     .padding(top = 6.dp, end = 62.dp)
             )
 
-            ZoomControls(
-                onZoomIn = { mapView?.controller?.zoomIn() },
-                onZoomOut = { mapView?.controller?.zoomOut() },
+            // Conteneur aligné en bas à droite pour le Zoom et le Bouton Légende
+            Column(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(bottom = 24.dp, end = 16.dp)
-            )
+                    .padding(bottom = 24.dp, end = 16.dp),
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                // Boutons Zoom (+) et (-)
+                ZoomControls(
+                    onZoomIn = { mapView?.controller?.zoomIn() },
+                    onZoomOut = { mapView?.controller?.zoomOut() }
+                )
+
+                // Affiche le bouton Légende juste en bas du Zoom UNIQUEMENT si les campus sont affichés
+                if (showCampus) {
+                    Surface(
+                        onClick = { showLegendBottomSheet = !showLegendBottomSheet },
+                        modifier = Modifier.size(40.dp),
+                        shape = androidx.compose.foundation.shape.CircleShape,
+                        color = Color.White,
+                        shadowElevation = 3.dp
+                    ) {
+                        Box(contentAlignment = Alignment.Center) {
+                            Icon(
+                                imageVector = androidx.compose.material.icons.Icons.Default.List,
+                                contentDescription = "Légende",
+                                tint = com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
+                            )
+                        }
+                    }
+                }
+            }
 
             CurrentWeatherBadge(
                 onClick = { onWeatherClick(userLocation?.latitude, userLocation?.longitude) },
@@ -656,6 +731,31 @@ fun MapScreen(
                             .align(Alignment.BottomCenter)
                             .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
                     )
+                }
+            }
+            if (showCampus && showLegendBottomSheet && batimentList.isNotEmpty()) {
+                ModalBottomSheet(
+                    onDismissRequest = { showLegendBottomSheet = false }
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                    ) {
+                        Text(
+                            text = "Légende des Bâtiments",
+                            style = androidx.compose.material3.MaterialTheme.typography.titleMedium,
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 12.dp)
+                        )
+
+                        CampusLegend(
+                            batimentList = batimentList,
+                            legendList = legendList,
+                            languageViewModel = languageViewModel,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
                 }
             }
         }

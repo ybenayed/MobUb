@@ -2,7 +2,7 @@ package com.smartcampus.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.Geometry;
 
 import java.time.LocalDateTime;
 
@@ -27,8 +27,10 @@ public class Campus {
 
     private Double perimeterMeters;
 
-    @Column(columnDefinition = "geometry(Polygon,4326)")
-    private Polygon polygon;
+    // Geometry générique : peut être un Polygon ou un MultiPolygon
+    // (ex : campus en plusieurs parties disjointes)
+    @Column(columnDefinition = "geometry(Geometry,4326)")
+    private Geometry polygon;
 
     private LocalDateTime importedAt;
 
