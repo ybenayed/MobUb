@@ -16,3 +16,9 @@ val ObcampusPrimary = Color(0xFF038554)
 val ObcampusSecondary = Color(0xFF049D64)
 val ObcampusBackground = Color(0xFFF7F9FA)
 val ObcampusTextWhite = Color.White
+
+// WayPus - ecrans d'authentification (login / creation de compte)
+val WaypusAuthBackground = Color(0xFFEAF0D8)
+val WaypusInputBorder = Color(0xFFBFD3A0)
+val WaypusTextMuted = Color(0xFF5C7259)
+val WaypusTextDark = Color(0xFF204030)

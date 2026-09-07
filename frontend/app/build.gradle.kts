@@ -54,6 +54,7 @@ dependencies {
     implementation("com.google.mlkit:translate:17.0.3")
     // Pour détecter la langue automatiquement (optionnel)
     implementation("com.google.mlkit:language-id:17.0.6")
+    implementation("androidx.compose.material:material-icons-extended:1.7.5")
 
 
     testImplementation(libs.junit)

@@ -5,6 +5,10 @@ package com.ObservatoireCampus.mobile.ui.components.navigation
  * la navigation modulaire, comme demande.[cite: 2]
  */
 sealed class Screen(val route: String) {
+    // AJOUT : ecrans d'authentification
+    object Login : Screen("login")
+    object SignUp : Screen("signup")
+
     object Map : Screen("map")
 
     // Route parametree : lat/lon optionnels (position utilisateur transmise depuis MapScreen).[cite: 2]

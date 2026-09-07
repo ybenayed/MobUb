@@ -104,7 +104,7 @@ fun MapScreen(
     viewModel: MapViewModel = viewModel(),
     languageViewModel: LanguageViewModel,
     onWeatherClick: (Double?, Double?) -> Unit = { _, _ -> },
-    onInternshipClick: () -> Unit = {}
+    onInternshipClick: () -> Unit = {},onLogout: () -> Unit = {}
 ) {
     val campusList by viewModel.campusList.collectAsState()
     val batimentList by viewModel.batimentList.collectAsState()
@@ -386,7 +386,11 @@ fun MapScreen(
                     scope.launch { drawerState.close() }
                     showItineraryPanel = true
                 },
-                onBackToMap = { scope.launch { drawerState.close() } }
+                onBackToMap = { scope.launch { drawerState.close() } },
+                onLogout = {
+                    scope.launch { drawerState.close() }
+                    onLogout()
+                }
             )
         }
     ) {
