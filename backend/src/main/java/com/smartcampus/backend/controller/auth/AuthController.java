@@ -1,8 +1,10 @@
 package com.smartcampus.backend.controller.auth;
 
 import com.smartcampus.backend.dto.auth.AuthResponse;
+import com.smartcampus.backend.dto.auth.ForgotPasswordRequest;
 import com.smartcampus.backend.dto.auth.LoginRequest;
 import com.smartcampus.backend.dto.auth.RegisterRequest;
+import com.smartcampus.backend.dto.auth.ResetPasswordRequest;
 import com.smartcampus.backend.service.auth.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,5 +32,16 @@ public class AuthController {
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
         AuthResponse response = authService.login(request);
         return ResponseEntity.ok(response);
+    }
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        authService.requestPasswordReset(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        authService.resetPassword(request);
+        return ResponseEntity.ok().build();
     }
 }

@@ -54,7 +54,7 @@ public class SecurityConfig {
                         // ⚠️ A AJUSTER : mets ici toutes tes routes existantes (batiments,
                         // parkings, meteo...) si tu veux qu'elles restent accessibles
                         // SANS etre connecte. Sinon elles deviendront protegees par JWT.
-                        .requestMatchers("/api/batiments/**", "/api/campus/**","/local/**",                                "/api/parking/**", "/api/weather/**", "/api/air-quality/**",
+                        .requestMatchers("/api/batiments/**", "/api/campus/**","/local/**", "/api/auth/**"                               ,"/api/parking/**", "/api/weather/**", "/api/air-quality/**",
                                 "/api/stationTB/**","/api/stationTer/**","/api/stationV/**", "/api/search/**", "/api/itinerary/**",
                                 "/api/freeVehicle/**").permitAll()
                         .anyRequest().authenticated()

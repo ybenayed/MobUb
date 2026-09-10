@@ -1,57 +1,61 @@
 package com.ObservatoireCampus.mobile.ui.theme
 
-import android.app.Activity
-import android.os.Build
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+/**
+ * Sans ce fichier, MaterialTheme applique son schema de couleurs par defaut
+ * (base sur Purple40/Purple80...), d'ou le mauve qui apparaissait un peu
+ * partout (Switch, boutons par defaut, indicateurs, etc.). Ce theme
+ * remplace ca par des couleurs coherentes avec le vert de la marque.
+ *
+ * Usage dans MainActivity :
+ *   setContent {
+ *       ObcampusTheme {
+ *           AppNavHost(languageViewModel = languageViewModel)
+ *       }
+ *   }
+ */
+private val ObcampusLightColors = lightColorScheme(
+    primary = ObcampusPrimary,
+    onPrimary = ObcampusTextWhite,
+    secondary = ObcampusSecondary,
+    onSecondary = ObcampusTextWhite,
+    tertiary = WaypusTextMuted,
+    background = ObcampusBackground,
+    onBackground = WaypusTextDark,
+    surface = ObcampusTextWhite,
+    onSurface = WaypusTextDark,
+    surfaceVariant = WaypusAuthBackground,
+    onSurfaceVariant = WaypusTextMuted
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val ObcampusDarkColors = darkColorScheme(
+    primary = ObcampusSecondary,
+    onPrimary = ObcampusTextWhite,
+    secondary = ObcampusPrimary,
+    onSecondary = ObcampusTextWhite,
+    tertiary = WaypusTextMuted,
+    background = WaypusTextDark,
+    onBackground = ObcampusTextWhite,
+    surface = WaypusTextDark,
+    onSurface = ObcampusTextWhite
 )
 
 @Composable
-fun ObservatoireCampusMobileTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+fun ObcampusTheme(
+    darkTheme: Boolean = false, // volontairement pas isSystemInDarkTheme() pour l'instant :
+    // l'appli n'a pas encore de variante sombre testee visuellement.
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-      dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-        val context = LocalContext.current
-        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-      }
-      darkTheme -> DarkColorScheme
-      else -> LightColorScheme
-    }
+    val colorScheme = if (darkTheme) ObcampusDarkColors else ObcampusLightColors
 
     MaterialTheme(
-      colorScheme = colorScheme,
-      typography = Typography,
-      content = content
+        colorScheme = colorScheme,
+        content = content
     )
+    // NB : si vous avez deja un objet Typography (Type.kt genere par defaut par
+    // Android Studio), dites-le moi et je l'ajoute ici : MaterialTheme(colorScheme = colorScheme, typography = Typography, content = content)
 }

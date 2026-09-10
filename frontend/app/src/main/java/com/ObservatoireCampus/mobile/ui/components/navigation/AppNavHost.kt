@@ -13,11 +13,15 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ObservatoireCampus.mobile.network.RetrofitClient
 import com.ObservatoireCampus.mobile.repository.AuthRepository
-import com.ObservatoireCampus.mobile.ui.screens.LoginScreen
-import com.ObservatoireCampus.mobile.ui.screens.SignUpScreen
-import com.ObservatoireCampus.mobile.ui.screens.MapScreen
-import com.ObservatoireCampus.mobile.ui.screens.WeatherScreen
+import com.ObservatoireCampus.mobile.ui.screens.AccountScreen
+import com.ObservatoireCampus.mobile.ui.screens.ForgotPasswordScreen
 import com.ObservatoireCampus.mobile.ui.screens.InternshipScreen
+import com.ObservatoireCampus.mobile.ui.screens.LoginScreen
+import com.ObservatoireCampus.mobile.ui.screens.MapScreen
+import com.ObservatoireCampus.mobile.ui.screens.SignUpScreen
+import com.ObservatoireCampus.mobile.ui.screens.WeatherScreen
+import com.ObservatoireCampus.mobile.viewmodel.AccountViewModel
+import com.ObservatoireCampus.mobile.viewmodel.AccountViewModelFactory
 import com.ObservatoireCampus.mobile.viewmodel.AuthUiState
 import com.ObservatoireCampus.mobile.viewmodel.AuthViewModel
 import com.ObservatoireCampus.mobile.viewmodel.AuthViewModelFactory
@@ -30,9 +34,6 @@ fun AppNavHost(
 ) {
     val navController = rememberNavController()
 
-    // Un seul AuthRepository partage entre Login et SignUp (evite de le recreer
-    // a chaque navigation). S'appuie sur les singletons deja initialises dans
-    // MainActivity via RetrofitClient.init(this).
     val authRepository = remember {
         AuthRepository(
             authApi = RetrofitClient.authApi,
@@ -48,7 +49,6 @@ fun AppNavHost(
             )
             val uiState by authViewModel.uiState.collectAsState()
 
-            // Reagit au resultat du login : navigue vers la carte en cas de succes.
             LaunchedEffect(uiState) {
                 if (uiState is AuthUiState.Success) {
                     navController.navigate(Screen.Map.route) {
@@ -65,6 +65,9 @@ fun AppNavHost(
                 },
                 onNavigateToSignUp = {
                     navController.navigate(Screen.SignUp.route)
+                },
+                onNavigateToForgotPassword = {
+                    navController.navigate("forgot_password")
                 },
                 isLoading = uiState is AuthUiState.Loading,
                 errorMessage = (uiState as? AuthUiState.Error)?.message
@@ -108,7 +111,6 @@ fun AppNavHost(
             )
         }
 
-        // MODIFIE : ajout de onLogout
         composable(Screen.Map.route) {
             MapScreen(
                 languageViewModel = languageViewModel,
@@ -118,15 +120,26 @@ fun AppNavHost(
                 onInternshipClick = {
                     navController.navigate(Screen.Internship.route)
                 },
+                onAccountClick = {
+                    navController.navigate(Screen.Account.route)
+                },
                 onLogout = {
                     RetrofitClient.getTokenManager().clearToken()
                     navController.navigate(Screen.Login.route) {
-                        // Vide TOUT l'historique (Map, Weather, Internship...), pas
-                        // seulement jusqu'a Login, car la deconnexion peut arriver
-                        // depuis n'importe quel ecran protege.
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Screen.Account.route) {
+            val accountViewModel: AccountViewModel = viewModel(
+                factory = AccountViewModelFactory(authRepository, languageViewModel)
+            )
+            AccountScreen(
+                accountViewModel = accountViewModel,
+                languageViewModel = languageViewModel,
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -152,6 +165,30 @@ fun AppNavHost(
             InternshipScreen(
                 languageViewModel = languageViewModel,
                 onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable("forgot_password") {
+            val authViewModel: AuthViewModel = viewModel(
+                factory = AuthViewModelFactory(authRepository, languageViewModel)
+            )
+            val uiState by authViewModel.uiState.collectAsState()
+
+            ForgotPasswordScreen(
+                languageViewModel = languageViewModel,
+                onSubmitEmail = { email ->
+                    authViewModel.requestPasswordReset(email)
+                },
+                onConfirmReset = { request ->
+                    authViewModel.confirmPasswordReset(request)
+                },
+                onNavigateBackToLogin = {
+                    navController.popBackStack()
+                },
+                isLoading = uiState is AuthUiState.Loading,
+                errorMessage = (uiState as? AuthUiState.Error)?.message,
+                isCodeSent = uiState is AuthUiState.ResetPasswordCodeSent,
+                isCompleted = uiState is AuthUiState.ResetPasswordCompleted
             )
         }
     }

@@ -10,8 +10,6 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,7 +24,9 @@ import com.ObservatoireCampus.mobile.ui.theme.ObcampusTextWhite
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
 /**
- * Barre de navigation supérieure : icône menu ou retour + titre traduit.
+ * Barre de navigation superieure : icone menu ou retour + marque MobUB.
+ * Meme couleur de fond (ObcampusPrimary) que le bouton "Se connecter" du
+ * login, pour une identite visuelle coherente dans toute l'appli.
  */
 @Composable
 fun TopBar(
@@ -36,12 +36,10 @@ fun TopBar(
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
 
-    var translatedTitle by remember { mutableStateOf("OBCampus") }
     var translatedMenuDesc by remember { mutableStateOf("Menu") }
     var translatedBackDesc by remember { mutableStateOf("Retour") }
 
     LaunchedEffect(currentLanguage) {
-        translatedTitle = languageViewModel.translate("OBCampus")
         translatedMenuDesc = languageViewModel.translate("Menu")
         translatedBackDesc = languageViewModel.translate("Retour")
     }
@@ -61,10 +59,8 @@ fun TopBar(
                 tint = ObcampusTextWhite
             )
         }
-        Text(
-            text = translatedTitle,
-            color = ObcampusTextWhite,
-            style = MaterialTheme.typography.titleLarge,
+        MobUbTopBarBrand(
+            onColoredBackground = true,
             modifier = Modifier.padding(start = 4.dp)
         )
     }

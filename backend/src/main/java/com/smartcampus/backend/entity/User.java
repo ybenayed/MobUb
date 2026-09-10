@@ -9,7 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
-
+import  lombok.*;
 /**
  * Utilisateur de l'application (login / creation de compte).
  * nationality / residence sont conserves a des fins statistiques
@@ -24,6 +24,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
 public class User {
 
     @Id
@@ -66,4 +68,10 @@ public class User {
         USER,
         ADMIN
     }
+    // pour regenerer le mot de passe de l'utilisateur, on peut utiliser BCryptPasswordEncoder de Spring Security
+    @Column(name = "reset_code")
+    private String resetCode;
+
+    @Column(name = "reset_code_expiration")
+    private LocalDateTime resetCodeExpiration;
 }

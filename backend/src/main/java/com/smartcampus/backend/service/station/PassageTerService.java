@@ -3,7 +3,6 @@ package com.smartcampus.backend.service.station;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.backend.dto.station.PassageTerDTO;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +12,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -44,16 +44,16 @@ public class PassageTerService {
     @Value("${navitia.cache-ttl-seconds:60}")
     private long cacheTtlSeconds;
 
-    private static final DateTimeFormatter NAVITIA_DATETIME =
-        DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    // Fuseau horaire local (Bordeaux/Paris) et formatteurs
+    private static final ZoneId BORDEAUX_ZONE = ZoneId.of("Europe/Paris");
+    private static final DateTimeFormatter NAVITIA_DATETIME = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    private static final String DEPARTURES_TEMPLATE =
-        "{baseUrl}/stop_areas/{stopId}/departures?count=10";
+    private static final String DEPARTURES_TEMPLATE = "{baseUrl}/stop_areas/{stopId}/departures?count=10";
 
     private final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
-    //const
     public PassageTerService(@Qualifier("navitiaRestTemplate") RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
@@ -109,13 +109,16 @@ public class PassageTerService {
                 JsonNode info = dep.path("display_informations");
                 JsonNode stopDateTime = dep.path("stop_date_time");
 
-                String aimed = stopDateTime.path("base_departure_date_time").asText(null);
-                String expected = stopDateTime.path("departure_date_time").asText(null);
+                String aimedRaw = stopDateTime.path("base_departure_date_time").asText(null);
+                String expectedRaw = stopDateTime.path("departure_date_time").asText(null);
                 boolean tempsReel = "realtime".equals(stopDateTime.path("data_freshness").asText(null));
 
+                String heureTheorique = formatToBordeauxTime(aimedRaw);
+                String heurePrevue = formatToBordeauxTime(expectedRaw);
+
                 Long retardSecondes = null;
-                if (tempsReel && aimed != null && expected != null) {
-                    retardSecondes = computeDelaySeconds(aimed, expected);
+                if (tempsReel && aimedRaw != null && expectedRaw != null) {
+                    retardSecondes = computeDelaySeconds(aimedRaw, expectedRaw);
                 }
 
                 passages.add(PassageTerDTO.builder()
@@ -123,8 +126,8 @@ public class PassageTerService {
                         .modeCommercial(info.path("commercial_mode").asText(null))
                         .direction(info.path("direction").asText(null))
                         .destination(info.path("headsign").asText(null))
-                        .heureTheorique(aimed)
-                        .heurePrevue(expected)
+                        .heureTheorique(heureTheorique)
+                        .heurePrevue(heurePrevue)
                         .retardSecondes(retardSecondes)
                         .tempsReel(tempsReel)
                         .build());
@@ -136,6 +139,23 @@ public class PassageTerService {
 
         log.info("Passages rafraichis pour {} : {} resultats", navitiaStopId, passages.size());
         return passages;
+    }
+
+    /**
+     * Convertit une chaîne de date Navitia (ex: "20260908T163000")
+     * vers le format lisible "HH:mm" (ex: "16:30") ajusté sur le fuseau de Bordeaux.
+     */
+    private String formatToBordeauxTime(String navitiaDateTimeStr) {
+        if (navitiaDateTimeStr == null || navitiaDateTimeStr.isBlank()) {
+            return null;
+        }
+        try {
+            LocalDateTime ldt = LocalDateTime.parse(navitiaDateTimeStr, NAVITIA_DATETIME);
+            return ldt.atZone(BORDEAUX_ZONE).format(TIME_FORMATTER);
+        } catch (DateTimeParseException e) {
+            log.warn("Impossible de parser la date Navitia : {}", navitiaDateTimeStr);
+            return navitiaDateTimeStr;
+        }
     }
 
     private Long computeDelaySeconds(String aimed, String expected) {

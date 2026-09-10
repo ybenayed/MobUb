@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.ObservatoireCampus.mobile.model.auth.AuthResponseDto
 import com.ObservatoireCampus.mobile.model.auth.LoginRequestDto
 import com.ObservatoireCampus.mobile.model.auth.RegisterRequestDto
+import com.ObservatoireCampus.mobile.model.auth.ResetPasswordRequestDto
 import com.ObservatoireCampus.mobile.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,6 +17,8 @@ sealed class AuthUiState {
     object Idle : AuthUiState()
     object Loading : AuthUiState()
     data class Success(val authData: AuthResponseDto) : AuthUiState()
+    data class ResetPasswordCodeSent(val message: String) : AuthUiState()
+    data class ResetPasswordCompleted(val message: String) : AuthUiState()
     data class Error(val message: String) : AuthUiState()
 }
 
@@ -51,6 +54,36 @@ class AuthViewModel(
                 _uiState.value = AuthUiState.Success(it)
             }.onFailure { error ->
                 val translatedError = languageViewModel.translate(error.message ?: "Erreur lors de la création du compte")
+                _uiState.value = AuthUiState.Error(translatedError)
+            }
+        }
+    }
+
+    fun requestPasswordReset(email: String) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val result = authRepository.requestPasswordReset(email)
+
+            result.onSuccess {
+                val successMsg = languageViewModel.translate("Un code a été envoyé à votre e-mail.")
+                _uiState.value = AuthUiState.ResetPasswordCodeSent(successMsg)
+            }.onFailure { error ->
+                val translatedError = languageViewModel.translate(error.message ?: "Erreur lors de l'envoi du code")
+                _uiState.value = AuthUiState.Error(translatedError)
+            }
+        }
+    }
+
+    fun confirmPasswordReset(request: ResetPasswordRequestDto) {
+        viewModelScope.launch {
+            _uiState.value = AuthUiState.Loading
+            val result = authRepository.confirmPasswordReset(request)
+
+            result.onSuccess {
+                val successMsg = languageViewModel.translate("Mot de passe réinitialisé avec succès !")
+                _uiState.value = AuthUiState.ResetPasswordCompleted(successMsg)
+            }.onFailure { error ->
+                val translatedError = languageViewModel.translate(error.message ?: "Code invalide ou expiré")
                 _uiState.value = AuthUiState.Error(translatedError)
             }
         }

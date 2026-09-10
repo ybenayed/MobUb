@@ -24,4 +24,7 @@ sealed class Screen(val route: String) {
 
     // AJOUT : Route statique pour l'écran "À propos" (Cadre de stage)
     object Internship : Screen("internship")
+
+    // AJOUT : "Mon compte" (profil + changement de mot de passe)
+    object Account : Screen("account")
 }

@@ -17,6 +17,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -24,14 +25,20 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import  androidx.compose.ui.zIndex
+import androidx.compose.ui.viewinterop.AndroidView
 import com.ObservatoireCampus.mobile.ui.components.LanguageSelector
-import com.ObservatoireCampus.mobile.ui.components.WaypusLogo
+import com.ObservatoireCampus.mobile.ui.components.MobUbLogo
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
-import com.ObservatoireCampus.mobile.ui.theme.WaypusAuthBackground
 import com.ObservatoireCampus.mobile.ui.theme.WaypusInputBorder
 import com.ObservatoireCampus.mobile.ui.theme.WaypusTextDark
 import com.ObservatoireCampus.mobile.ui.theme.WaypusTextMuted
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
+import org.osmdroid.config.Configuration
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.views.CustomZoomButtonsController
+import org.osmdroid.views.MapView
 
 data class SignUpFormData(
     val username: String,
@@ -42,13 +49,49 @@ data class SignUpFormData(
     val password: String
 )
 
-/**
- * Ecran de creation de compte. Reprend exactement les champs attendus
- * par RegisterRequest cote backend (voir AuthController.register).
- * UI "bete" : la validation finale et l'appel reseau se font dans le ViewModel
- * appelant (prochaine etape), ici on ne fait qu'une pre-validation visuelle
- * du mot de passe pour guider l'utilisateur.
- */
+private data class SignUpStrings(
+    val back: String = "Retour a la connexion",
+    val title: String = "Creer un compte",
+    val username: String = "Nom d'utilisateur",
+    val email: String = "Email",
+    val phoneNumber: String = "Numero de telephone",
+    val nationality: String = "Nationalite",
+    val residence: String = "Lieu de residence",
+    val password: String = "Mot de passe",
+    val showPassword: String = "Afficher le mot de passe",
+    val hidePassword: String = "Masquer le mot de passe",
+    val reqMinLength: String = "Au moins 8 caracteres",
+    val reqUppercase: String = "Une lettre majuscule",
+    val reqDigit: String = "Un chiffre",
+    val reqSpecialChar: String = "Un caractere special",
+    val submit: String = "Creer mon compte",
+    val alreadyHaveAccount: String = "Deja un compte ? ",
+    val login: String = "Se connecter"
+)
+
+private suspend fun LanguageViewModel.translateSignUpStrings(): SignUpStrings {
+    val base = SignUpStrings()
+    return SignUpStrings(
+        back = translate(base.back),
+        title = translate(base.title),
+        username = translate(base.username),
+        email = translate(base.email),
+        phoneNumber = translate(base.phoneNumber),
+        nationality = translate(base.nationality),
+        residence = translate(base.residence),
+        password = translate(base.password),
+        showPassword = translate(base.showPassword),
+        hidePassword = translate(base.hidePassword),
+        reqMinLength = translate(base.reqMinLength),
+        reqUppercase = translate(base.reqUppercase),
+        reqDigit = translate(base.reqDigit),
+        reqSpecialChar = translate(base.reqSpecialChar),
+        submit = translate(base.submit),
+        alreadyHaveAccount = translate(base.alreadyHaveAccount),
+        login = translate(base.login)
+    )
+}
+
 @Composable
 fun SignUpScreen(
     languageViewModel: LanguageViewModel,
@@ -65,6 +108,12 @@ fun SignUpScreen(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val currentLanguage by languageViewModel.currentLanguage.collectAsState()
+    var strings by remember { mutableStateOf(SignUpStrings()) }
+    LaunchedEffect(currentLanguage) {
+        strings = languageViewModel.translateSignUpStrings()
+    }
+
     val hasMinLength = password.length >= 8
     val hasUppercase = password.any { it.isUpperCase() }
     val hasDigit = password.any { it.isDigit() }
@@ -75,199 +124,255 @@ fun SignUpScreen(
             phoneNumber.isNotBlank() && nationality.isNotBlank() &&
             residence.isNotBlank() && isPasswordValid
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(WaypusAuthBackground)
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 24.dp)
-    ) {
-        Spacer(modifier = Modifier.height(16.dp))
+    val defaultCenter = remember { GeoPoint(44.8069, -0.5959) }
+    var mapViewRef by remember { mutableStateOf<MapView?>(null) }
 
+    DisposableEffect(Unit) {
+        onDispose { mapViewRef?.onDetach() }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        // --- Fond carte OSM ---
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { ctx ->
+                Configuration.getInstance().userAgentValue = ctx.packageName
+                MapView(ctx).apply {
+                    setTileSource(TileSourceFactory.MAPNIK)
+                    setMultiTouchControls(false)
+                    zoomController.setVisibility(CustomZoomButtonsController.Visibility.NEVER)
+                    minZoomLevel = 5.0
+                    maxZoomLevel = 19.0
+
+                    viewTreeObserver.addOnGlobalLayoutListener(object :
+                        android.view.ViewTreeObserver.OnGlobalLayoutListener {
+                        override fun onGlobalLayout() {
+                            controller.setZoom(13.0)
+                            controller.setCenter(defaultCenter)
+                            viewTreeObserver.removeOnGlobalLayoutListener(this)
+                        }
+                    })
+
+                    setOnTouchListener { _, _ -> true }
+                }.also { mapViewRef = it }
+            },
+            update = { mapView ->
+                mapView.controller.setCenter(defaultCenter)
+            }
+        )
+
+        // Voile sombre pour le contraste
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.10f))
+        )
+
+        // Barre d'en-tête (Retour + Sélecteur de langue)
+        // Barre d'en-tête (Retour + Sélecteur de langue)
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .statusBarsPadding()
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+                .align(Alignment.TopCenter)
+                .zIndex(100f), // <--- AJOUTE CECI pour débloquer les clics sur l'en-tête
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onNavigateBackToLogin) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Retour a la connexion",
+                    contentDescription = strings.back,
                     tint = WaypusTextDark
                 )
             }
             LanguageSelector(languageViewModel = languageViewModel)
         }
 
-        Spacer(modifier = Modifier.height(4.dp))
-
-        WaypusLogo(
+        // Formulaire d'inscription
+        Column(
             modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = 8.dp),
-            showTagline = false
-        )
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(horizontal = 20.dp)
+                .padding(top = 64.dp, bottom = 24.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(Color.White.copy(alpha = 0.65f))
+                    .padding(horizontal = 24.dp, vertical = 28.dp)
+            ) {
+                MobUbLogo(
+                    modifier = Modifier.align(Alignment.CenterHorizontally),
+                    showTagline = false
+                )
 
-        Text(
-            text = "Creer un compte",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Medium,
-            color = WaypusTextDark,
-            modifier = Modifier
-                .align(Alignment.CenterHorizontally)
-                .padding(bottom = 24.dp)
-        )
+                Text(
+                    text = strings.title,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = WaypusTextDark,
+                    modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp, bottom = 24.dp)
+                )
 
-        OutlinedTextField(
-            value = username,
-            onValueChange = { username = it },
-            label = { Text("Nom d'utilisateur") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            colors = waypusFieldColors(),
-            shape = RoundedCornerShape(10.dp)
-        )
-        Spacer(modifier = Modifier.height(14.dp))
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text(strings.username) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = waypusFieldColors(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                Spacer(modifier = Modifier.height(14.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = { email = it },
-            label = { Text("Email") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-            modifier = Modifier.fillMaxWidth(),
-            colors = waypusFieldColors(),
-            shape = RoundedCornerShape(10.dp)
-        )
-        Spacer(modifier = Modifier.height(14.dp))
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text(strings.email) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = waypusFieldColors(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                Spacer(modifier = Modifier.height(14.dp))
 
-        OutlinedTextField(
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it },
-            label = { Text("Numero de telephone") },
-            singleLine = true,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
-            modifier = Modifier.fillMaxWidth(),
-            colors = waypusFieldColors(),
-            shape = RoundedCornerShape(10.dp)
-        )
-        Spacer(modifier = Modifier.height(14.dp))
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text(strings.phoneNumber) },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = waypusFieldColors(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                Spacer(modifier = Modifier.height(14.dp))
 
-        OutlinedTextField(
-            value = nationality,
-            onValueChange = { nationality = it },
-            label = { Text("Nationalite") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            colors = waypusFieldColors(),
-            shape = RoundedCornerShape(10.dp)
-        )
-        Spacer(modifier = Modifier.height(14.dp))
+                OutlinedTextField(
+                    value = nationality,
+                    onValueChange = { nationality = it },
+                    label = { Text(strings.nationality) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = waypusFieldColors(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                Spacer(modifier = Modifier.height(14.dp))
 
-        OutlinedTextField(
-            value = residence,
-            onValueChange = { residence = it },
-            label = { Text("Lieu de residence") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            colors = waypusFieldColors(),
-            shape = RoundedCornerShape(10.dp)
-        )
-        Spacer(modifier = Modifier.height(14.dp))
+                OutlinedTextField(
+                    value = residence,
+                    onValueChange = { residence = it },
+                    label = { Text(strings.residence) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = waypusFieldColors(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+                Spacer(modifier = Modifier.height(14.dp))
 
-        OutlinedTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = { Text("Mot de passe") },
-            singleLine = true,
-            visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-            trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                        contentDescription = if (passwordVisible) "Masquer le mot de passe" else "Afficher le mot de passe",
-                        tint = WaypusTextMuted
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text(strings.password) },
+                    singleLine = true,
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                contentDescription = if (passwordVisible) strings.hidePassword else strings.showPassword,
+                                tint = WaypusTextMuted
+                            )
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = waypusFieldColors(),
+                    shape = RoundedCornerShape(10.dp)
+                )
+
+                if (password.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    PasswordRequirementsChecklist(
+                        hasMinLength = hasMinLength,
+                        hasUppercase = hasUppercase,
+                        hasDigit = hasDigit,
+                        hasSpecialChar = hasSpecialChar,
+                        strings = strings
                     )
                 }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            colors = waypusFieldColors(),
-            shape = RoundedCornerShape(10.dp)
-        )
 
-        if (password.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            PasswordRequirementsChecklist(
-                hasMinLength = hasMinLength,
-                hasUppercase = hasUppercase,
-                hasDigit = hasDigit,
-                hasSpecialChar = hasSpecialChar
-            )
-        }
-
-        if (errorMessage != null) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = errorMessage,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall
-            )
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        Button(
-            onClick = {
-                onSignUpClick(
-                    SignUpFormData(
-                        username = username,
-                        email = email,
-                        phoneNumber = phoneNumber,
-                        nationality = nationality,
-                        residence = residence,
-                        password = password
+                if (errorMessage != null) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = errorMessage,
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall
                     )
-                )
-            },
-            enabled = isFormValid && !isLoading,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            shape = RoundedCornerShape(10.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = ObcampusPrimary)
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.height(20.dp),
-                    color = Color.White,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text("Creer mon compte", fontWeight = FontWeight.Medium)
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
+                Button(
+                    onClick = {
+                        onSignUpClick(
+                            SignUpFormData(
+                                username = username,
+                                email = email,
+                                phoneNumber = phoneNumber,
+                                nationality = nationality,
+                                residence = residence,
+                                password = password
+                            )
+                        )
+                    },
+                    enabled = isFormValid && !isLoading,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = ObcampusPrimary)
+                ) {
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.height(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(strings.submit, fontWeight = FontWeight.Medium)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = strings.alreadyHaveAccount,
+                        color = WaypusTextMuted,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Text(
+                        text = strings.login,
+                        color = ObcampusPrimary,
+                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.clickable { onNavigateBackToLogin() }
+                    )
+                }
             }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 32.dp),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = "Deja un compte ? ",
-                color = WaypusTextMuted,
-                style = MaterialTheme.typography.bodyMedium
-            )
-            Text(
-                text = "Se connecter",
-                color = ObcampusPrimary,
-                fontWeight = FontWeight.Medium,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.clickable { onNavigateBackToLogin() }
-            )
         }
     }
 }
@@ -277,13 +382,14 @@ private fun PasswordRequirementsChecklist(
     hasMinLength: Boolean,
     hasUppercase: Boolean,
     hasDigit: Boolean,
-    hasSpecialChar: Boolean
+    hasSpecialChar: Boolean,
+    strings: SignUpStrings
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        RequirementRow("Au moins 8 caracteres", hasMinLength)
-        RequirementRow("Une lettre majuscule", hasUppercase)
-        RequirementRow("Un chiffre", hasDigit)
-        RequirementRow("Un caractere special", hasSpecialChar)
+        RequirementRow(strings.reqMinLength, hasMinLength)
+        RequirementRow(strings.reqUppercase, hasUppercase)
+        RequirementRow(strings.reqDigit, hasDigit)
+        RequirementRow(strings.reqSpecialChar, hasSpecialChar)
     }
 }
 

@@ -12,6 +12,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -25,16 +26,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.ui.theme.WaypusInputBorder
 import com.ObservatoireCampus.mobile.ui.theme.WaypusTextDark
 import com.ObservatoireCampus.mobile.viewmodel.AppLanguage
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
-/**
- * Bouton unique "langue" (drapeau + code + fleche). Au clic, deroule
- * la liste des 3 langues disponibles.
- */
 @Composable
 fun LanguageSelector(
     languageViewModel: LanguageViewModel,
@@ -43,32 +41,44 @@ fun LanguageSelector(
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
-    Box(modifier = modifier) {
-        Row(
+    // Le zIndex(10f) force Compose à afficher ce bloc TOUJOURS au-dessus de la carte OSM
+    Box(modifier = modifier.zIndex(10f)) {
+        Surface(
+            shape = RoundedCornerShape(50),
+            color = Color.White,
+            shadowElevation = 2.dp,
             modifier = Modifier
                 .clip(RoundedCornerShape(50))
-                .background(Color.White)
                 .border(width = 0.5.dp, color = WaypusInputBorder, shape = RoundedCornerShape(50))
                 .clickable { expanded = true }
-                .padding(horizontal = 10.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            FlagChip(language = currentLanguage)
-            Text(
-                text = currentLanguage.name,
-                style = MaterialTheme.typography.labelMedium,
-                color = WaypusTextDark
-            )
-            Icon(
-                imageVector = Icons.Default.KeyboardArrowDown,
-                contentDescription = "Choisir la langue",
-                tint = ObcampusPrimary,
-                modifier = Modifier.size(16.dp)
-            )
+            Row(
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                FlagChip(language = currentLanguage)
+                Text(
+                    text = currentLanguage.name,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = WaypusTextDark
+                )
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = "Choisir la langue",
+                    tint = ObcampusPrimary,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
 
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .background(Color.White)
+                .zIndex(11f) // Force la liste déroulante à passer par-dessus l'en-tête
+        ) {
             AppLanguage.values().forEach { lang ->
                 DropdownMenuItem(
                     text = {
@@ -77,7 +87,10 @@ fun LanguageSelector(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             FlagChip(language = lang)
-                            Text(text = languageLabel(lang))
+                            Text(
+                                text = languageLabel(lang),
+                                color = WaypusTextDark
+                            )
                         }
                     },
                     onClick = {
@@ -91,16 +104,11 @@ fun LanguageSelector(
 }
 
 private fun languageLabel(lang: AppLanguage): String = when (lang) {
-    AppLanguage.FR -> "Francais"
+    AppLanguage.FR -> "Français"
     AppLanguage.EN -> "English"
     AppLanguage.AR -> "Arabe"
 }
 
-/**
- * Pastille visuelle par langue. FR/EN = approximation simple du drapeau.
- * AR = icone neutre (globe) en attendant que tu choisisses un drapeau
- * national precis (Tunisie, Maroc, Arabie Saoudite...) a mettre a la place.
- */
 @Composable
 private fun FlagChip(language: AppLanguage, size: Dp = 18.dp) {
     when (language) {

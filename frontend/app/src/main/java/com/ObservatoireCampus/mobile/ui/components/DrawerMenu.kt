@@ -14,8 +14,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ObservatoireCampus.mobile.model.layers.LayerItemUiState
 import com.ObservatoireCampus.mobile.ui.components.layers.freevehicle.FreeVehicleDrawerSection
@@ -27,16 +25,6 @@ import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusSecondary
 import com.ObservatoireCampus.mobile.viewmodel.AppLanguage
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
-
-private data class DrawerOption(
-    val id: String,
-    val icon: ImageVector
-)
-
-private val drawerOptions = listOf(
-    DrawerOption("bornes_electriques", Icons.Default.EvStation),
-    DrawerOption("meteo", Icons.Default.Cloud)
-)
 
 @Composable
 fun DrawerMenu(
@@ -75,26 +63,25 @@ fun DrawerMenu(
     isTranslating: Boolean,
     onLanguageSelected: (AppLanguage) -> Unit,
     onWeatherClick: () -> Unit = {},
-    onInternshipClick: () -> Unit = {}, // <-- Callback vers l'écran "À propos"
-    onItineraryClick: () -> Unit = {}, // <-- Callback qui ouvre le panneau Itinéraire (bottom sheet)
-    onOptionClick: (String, Boolean) -> Unit = { _, _ -> },
+    onInternshipClick: () -> Unit = {},
+    onItineraryClick: () -> Unit = {},
+    onHistoryClick: () -> Unit = {},   // AJOUT : ouvre l'historique de recherche
+    onAccountClick: () -> Unit = {},   // AJOUT : ouvre "Mon compte" (profil + mdp)
     onBackToMap: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
-    var activeStates by remember {
-        mutableStateOf(drawerOptions.associate { it.id to false })
-    }
-
-    var translatedBornesLabel by remember { mutableStateOf("Bornes électriques") }
     var translatedMeteoLabel by remember { mutableStateOf("Météo") }
     var translatedItineraryLabel by remember { mutableStateOf("Itinéraire") }
+    var translatedHistoryLabel by remember { mutableStateOf("Historique") }
+    var translatedAccountLabel by remember { mutableStateOf("Mon compte") }
     var translatedLogoutLabel by remember { mutableStateOf("Déconnexion") }
     var translatedBackLabel by remember { mutableStateOf("Retour") }
 
     LaunchedEffect(currentLanguage) {
-        translatedBornesLabel = languageViewModel.translate("Bornes électriques")
         translatedMeteoLabel = languageViewModel.translate("Météo")
         translatedItineraryLabel = languageViewModel.translate("Itinéraire")
+        translatedHistoryLabel = languageViewModel.translate("Historique")
+        translatedAccountLabel = languageViewModel.translate("Mon compte")
         translatedLogoutLabel = languageViewModel.translate("Déconnexion")
         translatedBackLabel = languageViewModel.translate("Retour")
     }
@@ -116,23 +103,18 @@ fun DrawerMenu(
             IconButton(onClick = onBackToMap) {
                 Icon(Icons.Default.ArrowBack, contentDescription = translatedBackLabel)
             }
-            Text(
-                text = "OBCampus",
-                style = MaterialTheme.typography.titleLarge,
-                color = ObcampusPrimary
-            )
+            MobUbTopBarBrand()
         }
 
         HorizontalDivider()
 
-        // Conteneur déroulant
+        // Conteneur deroulant : couches de la carte
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
                 .padding(vertical = 8.dp)
         ) {
-            // PARKING
             ParkingDrawerSection(
                 items = parkingLayers,
                 masterActive = parkingMasterActive,
@@ -144,7 +126,6 @@ fun DrawerMenu(
                 currentLanguage = currentLanguage
             )
 
-            // BUS / TRAM
             StationTBDrawerSection(
                 items = stationTBLayers,
                 masterActive = stationTBMasterActive,
@@ -156,7 +137,6 @@ fun DrawerMenu(
                 currentLanguage = currentLanguage
             )
 
-            // VELO
             StationVDrawerSection(
                 items = stationVLayers,
                 masterActive = stationVMasterActive,
@@ -168,7 +148,6 @@ fun DrawerMenu(
                 currentLanguage = currentLanguage
             )
 
-            // TER
             StationTerDrawerSection(
                 items = stationTerLayers,
                 masterActive = stationTerMasterActive,
@@ -180,7 +159,6 @@ fun DrawerMenu(
                 currentLanguage = currentLanguage
             )
 
-            // LIBRE-SERVICE
             FreeVehicleDrawerSection(
                 items = freeVehicleLayers,
                 masterActive = freeVehicleMasterActive,
@@ -192,92 +170,35 @@ fun DrawerMenu(
                 currentLanguage = currentLanguage
             )
 
-            // AUTRES OPTIONS
-            drawerOptions.forEach { option ->
-                val isActive = activeStates[option.id] == true
-                val labelText = if (option.id == "bornes_electriques") translatedBornesLabel else translatedMeteoLabel
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(
-                            if (isActive) ObcampusSecondary.copy(alpha = 0.2f)
-                            else Color.Transparent
-                        )
-                        .clickable {
-                            if (option.id == "meteo") {
-                                onWeatherClick()
-                            }
-                        }
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(end = 8.dp)
-                    ) {
-                        Icon(
-                            imageVector = option.icon,
-                            contentDescription = labelText,
-                            tint = if (isActive) ObcampusPrimary else Color.Gray,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Text(
-                            text = labelText,
-                            maxLines = 2,
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-
-                    if (option.id != "meteo") {
-                        IconButton(
-                            onClick = {
-                                val newState = !(activeStates[option.id] ?: false)
-                                activeStates = activeStates.toMutableMap().apply {
-                                    put(option.id, newState)
-                                }
-                                onOptionClick(option.id, newState)
-                            },
-                            modifier = Modifier.size(28.dp)
-                        ) {
-                            Icon(
-                                imageVector = if (isActive) Icons.Default.Visibility
-                                else Icons.Default.VisibilityOff,
-                                contentDescription = "toggle"
-                            )
-                        }
-                    } else {
-                        Spacer(modifier = Modifier.width(28.dp))
-                    }
-                }
-            }
+            // METEO : simple raccourci de navigation, comme Itineraire/Historique
+            // (la case "Bornes electriques" a ete retiree : elle ne faisait rien).
+            DrawerNavigationRow(
+                icon = Icons.Default.Cloud,
+                label = translatedMeteoLabel,
+                onClick = onWeatherClick
+            )
         }
 
         // --- SECTION BASSE (STATIQUE, TOUJOURS VISIBLE) ---
         HorizontalDivider()
 
-        // 1. ITINÉRAIRE (ouvre le bottom sheet, même pattern que "À propos"/"Déconnexion")
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { onItineraryClick() }
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Directions, contentDescription = translatedItineraryLabel, tint = ObcampusPrimary)
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(text = translatedItineraryLabel, modifier = Modifier.weight(1f))
-        }
+        DrawerNavigationRow(
+            icon = Icons.Default.Directions,
+            label = translatedItineraryLabel,
+            onClick = onItineraryClick
+        )
 
         HorizontalDivider()
 
-        // 2. SECTION LANGUE
+        // AJOUT : Historique des recherches
+        DrawerNavigationRow(
+            icon = Icons.Default.History,
+            label = translatedHistoryLabel,
+            onClick = onHistoryClick
+        )
+
+        HorizontalDivider()
+
         LanguageDrawerSection(
             languageViewModel = languageViewModel,
             currentLanguage = currentLanguage,
@@ -287,7 +208,15 @@ fun DrawerMenu(
 
         HorizontalDivider()
 
-        // 3. BOUTON "À PROPOS" (JUSTE AVANT LA DECONNEXION)
+        // AJOUT : "Mon compte" (coordonnees utilisateur + changement de mot de passe)
+        DrawerNavigationRow(
+            icon = Icons.Default.AccountCircle,
+            label = translatedAccountLabel,
+            onClick = onAccountClick
+        )
+
+        HorizontalDivider()
+
         AboutDrawerSection(
             languageViewModel = languageViewModel,
             currentLanguage = currentLanguage,
@@ -296,7 +225,6 @@ fun DrawerMenu(
 
         HorizontalDivider()
 
-        // 4. BOUTON DE DECONNEXION
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -309,5 +237,30 @@ fun DrawerMenu(
             Text(text = translatedLogoutLabel, color = Color.Red, modifier = Modifier.weight(1f))
             Icon(Icons.Default.ArrowForward, contentDescription = "logout", tint = Color.Gray)
         }
+    }
+}
+
+/**
+ * Ligne de navigation generique du tiroir (icone + label + fleche), utilisee
+ * pour Itineraire / Historique / Meteo / Mon compte : evite de dupliquer le
+ * meme Row 4 fois.
+ */
+@Composable
+private fun DrawerNavigationRow(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(icon, contentDescription = label, tint = ObcampusPrimary)
+        Spacer(modifier = Modifier.width(12.dp))
+        Text(text = label, modifier = Modifier.weight(1f))
+        Icon(Icons.Default.ChevronRight, contentDescription = null, tint = Color.Gray)
     }
 }

@@ -11,6 +11,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,15 +31,14 @@ public class PassageTBService {
         "https://bdx.mecatran.com/utw/ws/siri/2.0/bordeaux/stop-monitoring.json" +
         "?AccountKey=opendata-bordeaux-metropole-flux-gtfs-rt&MonitoringRef={stopId}";
 
-    // Duree de vie du cache par arret - les horaires temps reel n'ont pas besoin
-    // d'une precision a la seconde, 20s est un bon compromis fraicheur/charge API
+    // Fuseau horaire local (Bordeaux) et formatteur d'heure HH:mm
+    private static final ZoneId BORDEAUX_ZONE = ZoneId.of("Europe/Paris");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
+
+    // Duree de vie du cache par arret
     private static final long CACHE_TTL_SECONDS = 20;
 
-    // Cache par stopId : chaque arret a sa propre entree, avec sa propre expiration
     private final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
-
-    // Verrou par stopId : evite que 2 requetes concurrentes sur le MEME arret
-    // declenchent 2 appels API en double pendant le refresh
     private final ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
 
     private record CacheEntry(List<PassageTBDTO> passages, Instant expiresAt) {
@@ -46,7 +47,6 @@ public class PassageTBService {
         }
     }
 
-    // Meme API pour bus et tram - seul le stopId change
     public List<PassageTBDTO> getNextPassages(String stopId) {
         CacheEntry entry = cache.get(stopId);
         if (entry != null && !entry.isExpired()) {
@@ -56,7 +56,6 @@ public class PassageTBService {
         ReentrantLock lock = locks.computeIfAbsent(stopId, k -> new ReentrantLock());
         lock.lock();
         try {
-            // Double-check : un autre thread a peut-etre deja rafraichi pendant qu'on attendait le lock
             entry = cache.get(stopId);
             if (entry != null && !entry.isExpired()) {
                 return entry.passages();
@@ -88,20 +87,23 @@ public class PassageTBService {
                 JsonNode journey = visit.path("MonitoredVehicleJourney");
                 JsonNode call = journey.path("MonitoredCall");
 
-                String aimed = call.path("AimedArrivalTime").asText(null);
-                String expected = call.path("ExpectedArrivalTime").asText(null);
+                String aimedRaw = call.path("AimedArrivalTime").asText(null);
+                String expectedRaw = call.path("ExpectedArrivalTime").asText(null);
+
+                String heureTheorique = formatToBordeauxTime(aimedRaw);
+                String heurePrevue = formatToBordeauxTime(expectedRaw);
 
                 Long retardSecondes = null;
-                if (aimed != null && expected != null) {
-                    retardSecondes = Duration.between(Instant.parse(aimed), Instant.parse(expected)).getSeconds();
+                if (aimedRaw != null && expectedRaw != null) {
+                    retardSecondes = Duration.between(Instant.parse(aimedRaw), Instant.parse(expectedRaw)).getSeconds();
                 }
 
                 passages.add(PassageTBDTO.builder()
                         .ligne(resolveLigne(journey))
                         .direction(firstValue(journey.path("DirectionName")))
                         .destination(firstValue(journey.path("DestinationName")))
-                        .heureTheorique(aimed)
-                        .heurePrevue(expected)
+                        .heureTheorique(heureTheorique)
+                        .heurePrevue(heurePrevue)
                         .retardSecondes(retardSecondes)
                         .build());
             }
@@ -114,17 +116,23 @@ public class PassageTBService {
     }
 
     /**
-     * Resout le code de ligne "public" (ex: "A" pour le tram A, "15" pour le bus 15)
-     * a partir du LineRef technique du passage (ex: "bordeaux:Line:59:LOC").
-     *
-     * Le flux stop-monitoring.json ne fournit pas de nom commercial directement
-     * (pas de PublishedLineName) : on passe donc par le referentiel LineTBService,
-     * alimente par l'endpoint lines-discovery.json qui expose le champ LineCode.
-     *
-     * Fallback sur un parsing brut du LineRef si la ligne est absente du
-     * referentiel (ligne toute nouvelle, referentiel pas encore synchronise...),
-     * pour ne jamais renvoyer un champ vide.
+     * Convertit une chaîne ISO-8601 UTC (ex: "2026-09-08T14:30:00Z")
+     * vers l'heure locale de Bordeaux au format "HH:mm" (ex: "16:30").
      */
+    private String formatToBordeauxTime(String isoUtcString) {
+        if (isoUtcString == null || isoUtcString.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(isoUtcString)
+                    .atZone(BORDEAUX_ZONE)
+                    .format(TIME_FORMATTER);
+        } catch (Exception e) {
+            log.warn("Impossible de parser la date ISO : {}", isoUtcString);
+            return isoUtcString;
+        }
+    }
+
     private String resolveLigne(JsonNode journey) {
         String lineRef = journey.path("LineRef").path("value").asText(null);
 
@@ -136,11 +144,6 @@ public class PassageTBService {
         return extractLineCodeFromRef(lineRef);
     }
 
-    /**
-     * Fallback uniquement : extrait le dernier segment utile d'un LineRef
-     * du type "bordeaux:Line:59:LOC" -> "59". N'est utilise que si le
-     * referentiel LineTBService ne connait pas encore cette ligne.
-     */
     private String extractLineCodeFromRef(String lineRef) {
         if (lineRef == null || lineRef.isBlank()) return null;
         if (!lineRef.contains(":")) return lineRef;
@@ -151,8 +154,6 @@ public class PassageTBService {
                 return segments[i + 1];
             }
         }
-        // Pas de segment "line" trouve : on prend l'avant-dernier segment
-        // (le dernier est generalement un suffixe generique type "LOC")
         return segments.length >= 2 ? segments[segments.length - 2] : segments[segments.length - 1];
     }
 
