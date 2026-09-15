@@ -1,6 +1,8 @@
 package com.smartcampus.backend.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,12 +16,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Centralise la transformation des exceptions metier / techniques
- * en reponses HTTP propres et exploitables cote mobile.
- */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleUserAlreadyExists(UserAlreadyExistsException ex,
@@ -51,7 +51,6 @@ public class GlobalExceptionHandler {
         return buildResponse(HttpStatus.FORBIDDEN, "Acces refuse", request, null);
     }
 
-    /** Erreurs de validation Bean Validation (@Valid) -> mapping champ -> message. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex,
                                                                    HttpServletRequest request) {
@@ -73,6 +72,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex,
                                                                     HttpServletRequest request) {
+        // CORRECTION : on loguait rien avant -> impossible de diagnostiquer un 500.
+        // Le client recoit toujours un message generique (securite), mais la vraie
+        // cause est maintenant tracee cote serveur.
+        log.error("Erreur non geree sur {} {}", request.getMethod(), request.getRequestURI(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Une erreur inattendue est survenue", request, null);
     }

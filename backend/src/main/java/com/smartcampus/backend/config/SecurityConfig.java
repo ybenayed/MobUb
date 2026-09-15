@@ -40,30 +40,32 @@ public class SecurityConfig {
         return config.getAuthenticationManager();
     }
 
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        // Routes publiques : login/register, et tout ce qui existait deja
-                        // avant l'ajout de la securite (sinon tu casses tout ton app existante !)
-                        .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/actuator/health").permitAll()
-                        // ⚠️ A AJUSTER : mets ici toutes tes routes existantes (batiments,
-                        // parkings, meteo...) si tu veux qu'elles restent accessibles
-                        // SANS etre connecte. Sinon elles deviendront protegees par JWT.
-                        .requestMatchers("/api/batiments/**", "/api/campus/**","/local/**", "/api/auth/**"                               ,"/api/parking/**", "/api/weather/**", "/api/air-quality/**",
-                                "/api/stationTB/**","/api/stationTer/**","/api/stationV/**", "/api/search/**", "/api/itinerary/**",
-                                "/api/freeVehicle/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+@Bean
+public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    http
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+            .csrf(csrf -> csrf.disable())
+            .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                    // Routes publiques : login/register
+                    .requestMatchers("/api/auth/**").permitAll()
+                    .requestMatchers("/actuator/health").permitAll()
 
-        return http.build();
-    }
+                    // Routes admin : reservees au role ADMIN
+                    .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
+                    // Routes publiques existantes (front, lecture libre)
+                    .requestMatchers("/api/batiments/**", "/api/campus/**", "/local/**",
+                            "/api/search-history/**", "/api/parking/**", "/api/weather/**",
+                            "/api/air-quality/**", "/api/stationTB/**", "/api/stationTer/**",
+                            "/api/stationV/**", "/api/search/**", "/api/itinerary/**",
+                            "/api/freeVehicle/**").permitAll()
+                    .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+    return http.build();
+}
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();

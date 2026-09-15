@@ -3,6 +3,7 @@ package com.smartcampus.backend.service.freevehicle;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.backend.dto.freevehicle.VehicleTypeFVDTO;
+import com.smartcampus.backend.dto.freevehicle.VehicleTypeFVRequestDTO;
 import com.smartcampus.backend.entity.freevehicle.VehicleTypeFV;
 import com.smartcampus.backend.mapper.freevehicle.VehicleTypeFVMapper;
 import com.smartcampus.backend.repository.freevehicle.VehicleTypeFVRepository;
@@ -66,4 +67,37 @@ public class VehicleTypeFVService {
                 .maxRangeMeters(maxRange)
                 .build();
     }
+
+
+
+    public VehicleTypeFVDTO createType(VehicleTypeFVRequestDTO request) {
+    if (vehicleTypeFVRepository.existsByVehicleTypeId(request.getVehicleTypeId())) {
+        throw new IllegalArgumentException("Ce type existe deja : " + request.getVehicleTypeId());
+    }
+    VehicleTypeFV type = VehicleTypeFV.builder()
+            .vehicleTypeId(request.getVehicleTypeId())
+            .formFactor(request.getFormFactor())
+            .propulsionType(request.getPropulsionType())
+            .name(request.getName())
+            .maxRangeMeters(request.getMaxRangeMeters())
+            .build();
+    return vehicleTypeFVMapper.toDTO(vehicleTypeFVRepository.save(type));
+}
+
+public VehicleTypeFVDTO updateType(Long id, VehicleTypeFVRequestDTO request) {
+    VehicleTypeFV type = vehicleTypeFVRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Type introuvable : " + id));
+    type.setName(request.getName());
+    type.setFormFactor(request.getFormFactor());
+    type.setPropulsionType(request.getPropulsionType());
+    type.setMaxRangeMeters(request.getMaxRangeMeters());
+    return vehicleTypeFVMapper.toDTO(vehicleTypeFVRepository.save(type));
+}
+
+public void deleteType(Long id) {
+    if (!vehicleTypeFVRepository.existsById(id)) {
+        throw new RuntimeException("Type introuvable : " + id);
+    }
+    vehicleTypeFVRepository.deleteById(id);
+}
 }

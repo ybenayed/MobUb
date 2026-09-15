@@ -3,8 +3,10 @@ package com.smartcampus.backend.service.station;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.backend.dto.station.StationTBDTO;
+import com.smartcampus.backend.dto.station.StationTBRequestDTO;
 import com.smartcampus.backend.dto.station.StationPositionTBDTO;
 import com.smartcampus.backend.entity.station.StationTB;
+import com.smartcampus.backend.exception.ResourceNotFoundException;
 import com.smartcampus.backend.mapper.station.StationTBMapper;
 import com.smartcampus.backend.repository.station.StationTBRepository;
 import lombok.RequiredArgsConstructor;
@@ -116,4 +118,48 @@ public class StationTBService {
         if (code.startsWith("B")) return "BUS";
         return "INCONNU";
     }
+
+
+    public StationTBDTO createStation(StationTBRequestDTO request) {
+    if (stationTBRepository.existsByStopId(request.getStopId())) {
+        throw new IllegalArgumentException("Un arret avec cet identifiant existe deja : " + request.getStopId());
+    }
+    String mode = (request.getMode() != null) ? request.getMode() : detectMode(request.getStopAreaRef());
+    StationTB station = StationTB.builder()
+            .stopId(request.getStopId())
+            .nom(request.getNom())
+            .stopAreaRef(request.getStopAreaRef())
+            .mode(mode)
+            .latitude(request.getLatitude())
+            .longitude(request.getLongitude())
+            .location(toPoint(request.getLatitude(), request.getLongitude()))
+            .lines(request.getLines())
+            .build();
+    return stationTBMapper.toDTO(stationTBRepository.save(station));
+}
+
+public StationTBDTO updateStation(Long id, StationTBRequestDTO request) {
+    StationTB station = stationTBRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Arret introuvable : " + id));
+    station.setNom(request.getNom());
+    station.setStopAreaRef(request.getStopAreaRef());
+    station.setMode(request.getMode() != null ? request.getMode() : detectMode(request.getStopAreaRef()));
+    station.setLatitude(request.getLatitude());
+    station.setLongitude(request.getLongitude());
+    station.setLocation(toPoint(request.getLatitude(), request.getLongitude()));
+    station.setLines(request.getLines());
+    return stationTBMapper.toDTO(stationTBRepository.save(station));
+}
+
+public void deleteStation(Long id) {
+    if (!stationTBRepository.existsById(id)) {
+        throw new ResourceNotFoundException("Arret introuvable : " + id);
+    }
+    stationTBRepository.deleteById(id);
+}
+
+private Point toPoint(Double lat, Double lon) {
+    if (lat == null || lon == null) return null;
+    return geometryFactory.createPoint(new Coordinate(lon, lat));
+}
 }

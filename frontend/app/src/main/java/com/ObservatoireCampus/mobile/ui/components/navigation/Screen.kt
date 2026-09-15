@@ -27,4 +27,7 @@ sealed class Screen(val route: String) {
 
     // AJOUT : "Mon compte" (profil + changement de mot de passe)
     object Account : Screen("account")
+
+    object History : Screen("search_history")
+
 }

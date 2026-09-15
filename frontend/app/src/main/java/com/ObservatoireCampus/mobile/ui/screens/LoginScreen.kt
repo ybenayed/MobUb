@@ -158,7 +158,8 @@ fun LoginScreen(
             LanguageSelector(languageViewModel = languageViewModel)
         }
 
-        // Formulaire
+        // Formulaire (scrollable) — on laisse de la place en bas (padding) pour
+        // que le contenu ne soit jamais caché par la barre de logos fixe.
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -303,33 +304,41 @@ fun LoginScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(80.dp))
+            // Espace reserve en bas pour que le formulaire ne soit jamais
+            // recouvert par la barre de logos fixe (voir plus bas dans le Box).
+            Spacer(modifier = Modifier.height(90.dp))
+        }
 
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+        // Barre de logos "Chaire Mobilite" / "Bordeaux INP" : desormais FIXE,
+        // ancree tout en bas de l'ecran, quel que soit le scroll du formulaire
+        // ou l'ouverture du clavier.
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                //.background(Color.White.copy(alpha = 0.85f))
+                .padding(vertical = 12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Spacer(modifier = Modifier.height(6.dp))
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                HorizontalDivider(color = Color.White.copy(alpha = 0.6f))
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo_chaire_mobilite),
-                        contentDescription = "Logo Chaire Mobilite",
-                        modifier = Modifier.height(28.dp)
-                    )
-                    Image(
-                        painter = painterResource(id = R.drawable.logo_bordeaux_inp),
-                        contentDescription = "Logo Bordeaux INP",
-                        modifier = Modifier.height(28.dp)
-                    )
-                }
+                Image(
+                    painter = painterResource(id = R.drawable.logo_chaire_mobilite),
+                    contentDescription = "Logo Chaire Mobilite",
+                    modifier = Modifier.height(28.dp)
+                )
+                Image(
+                    painter = painterResource(id = R.drawable.logo_bordeaux_inp),
+                    contentDescription = "Logo Bordeaux INP",
+                    modifier = Modifier.height(28.dp)
+                )
             }
-
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

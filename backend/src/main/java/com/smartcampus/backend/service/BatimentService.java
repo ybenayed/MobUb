@@ -3,6 +3,7 @@ package com.smartcampus.backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.backend.dto.BatimentDTO;
+import com.smartcampus.backend.dto.BatimentUpdateDTO;
 import com.smartcampus.backend.entity.Batiment;
 import com.smartcampus.backend.entity.Campus;
 import com.smartcampus.backend.repository.BatimentRepository;
@@ -230,5 +231,24 @@ private String resolveAppartenance(JsonNode feature, String name, String geoFill
                 .polygonCoordinates(GeometryUtils.extractExteriorRings(b.getPolygon()))
                 .importedAt(b.getImportedAt())
                 .build();
+    }
+
+
+
+    public BatimentDTO updateBatiment(Long id, BatimentUpdateDTO request) {
+        Batiment b = batimentRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bâtiment introuvable : " + id));
+        if (request.getName() != null) b.setName(request.getName());
+        if (request.getAppartenance() != null) b.setAppartenance(request.getAppartenance());
+        if (request.getFillColor() != null) b.setFillColor(request.getFillColor());
+        if (request.getStrokeColor() != null) b.setStrokeColor(request.getStrokeColor());
+        return toDTO(batimentRepository.save(b));
+    }
+
+    public void deleteBatiment(Long id) {
+        if (!batimentRepository.existsById(id)) {
+            throw new RuntimeException("Bâtiment introuvable : " + id);
+        }
+        batimentRepository.deleteById(id);
     }
 }

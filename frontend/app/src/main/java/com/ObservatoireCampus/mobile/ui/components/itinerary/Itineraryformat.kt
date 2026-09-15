@@ -1,6 +1,10 @@
 // ui/components/itinerary/ItineraryFormat.kt
 package com.ObservatoireCampus.mobile.ui.components.itinerary
 
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 object ItineraryFormat {
     fun duration(seconds: Long): String {
         val minutes = seconds / 60
@@ -17,5 +21,12 @@ object ItineraryFormat {
         0 -> "Trajet direct"
         1 -> "1 correspondance"
         else -> "$count correspondances"
+    }
+
+    /** Formate un timestamp epoch millis en heure locale "HH:mm". "--:--" si absent/invalide. */
+    fun clockTime(epochMillis: Long): String {
+        if (epochMillis <= 0L) return "--:--"
+        val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
+        return formatter.format(Date(epochMillis))
     }
 }

@@ -3,6 +3,7 @@ package com.smartcampus.backend.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.backend.dto.CampusDTO;
+import com.smartcampus.backend.dto.CampusUpdateDTO;
 import com.smartcampus.backend.entity.Campus;
 import com.smartcampus.backend.repository.CampusRepository;
 import com.smartcampus.backend.util.GeometryUtils;
@@ -116,4 +117,12 @@ public class CampusService {
                 .importedAt(campus.getImportedAt())
                 .build();
     }
+
+    public CampusDTO updateCampus(Long id, CampusUpdateDTO request) {
+    Campus campus = campusRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Campus introuvable : " + id));
+    if (request.getName() != null) campus.setName(request.getName());
+    if (request.getCity() != null) campus.setCity(request.getCity());
+    return toDTO(campusRepository.save(campus));
+}
 }

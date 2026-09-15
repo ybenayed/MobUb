@@ -1,16 +1,16 @@
 package com.smartcampus.backend.dto.search;
 
 public class GeoPointDTO {
-    private double lat;
-    private double lon;
+    private Double lat;
+    private Double lon;
 
     public GeoPointDTO() {}
     public GeoPointDTO(double lat, double lon) {
         this.lat = lat;
         this.lon = lon;
     }
-    public double getLat() { return lat; }
-    public void setLat(double lat) { this.lat = lat; }
-    public double getLon() { return lon; }
-    public void setLon(double lon) { this.lon = lon; }
+    public Double getLat() { return lat; }
+    public void setLat(Double lat) { this.lat = lat; }
+    public Double getLon() { return lon; }
+    public void setLon(Double lon) { this.lon = lon; }
 }

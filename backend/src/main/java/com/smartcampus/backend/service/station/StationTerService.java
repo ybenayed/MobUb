@@ -4,7 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.backend.dto.station.StationPositionTerDTO;
 import com.smartcampus.backend.dto.station.StationTerDTO;
+import com.smartcampus.backend.dto.station.StationTerRequestDTO;
 import com.smartcampus.backend.entity.station.StationTer;
+import com.smartcampus.backend.exception.ResourceNotFoundException;
 import com.smartcampus.backend.mapper.station.StationTerMapper;
 import com.smartcampus.backend.repository.station.StationTerRepository;
 import lombok.RequiredArgsConstructor;
@@ -136,4 +138,40 @@ public class StationTerService {
                 .distanceCentreMetres(distance)
                 .build();
     }
+
+    public StationTerDTO createStation(StationTerRequestDTO request) {
+    if (stationTerRepository.existsByNavitiaId(request.getNavitiaId())) {
+        throw new IllegalArgumentException("Une gare avec cet identifiant existe deja : " + request.getNavitiaId());
+    }
+    StationTer station = StationTer.builder()
+            .navitiaId(request.getNavitiaId())
+            .nom(request.getNom())
+            .latitude(request.getLatitude())
+            .longitude(request.getLongitude())
+            .location(toPoint(request.getLatitude(), request.getLongitude()))
+            .build();
+    return stationTerMapper.toDTO(stationTerRepository.save(station));
+}
+
+public StationTerDTO updateStation(Long id, StationTerRequestDTO request) {
+    StationTer station = stationTerRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Gare introuvable : " + id));
+    station.setNom(request.getNom());
+    station.setLatitude(request.getLatitude());
+    station.setLongitude(request.getLongitude());
+    station.setLocation(toPoint(request.getLatitude(), request.getLongitude()));
+    return stationTerMapper.toDTO(stationTerRepository.save(station));
+}
+
+public void deleteStation(Long id) {
+    if (!stationTerRepository.existsById(id)) {
+        throw new ResourceNotFoundException("Gare introuvable : " + id);
+    }
+    stationTerRepository.deleteById(id);
+}
+
+private Point toPoint(Double lat, Double lon) {
+    if (lat == null || lon == null) return null;
+    return geometryFactory.createPoint(new Coordinate(lon, lat));
+}
 }

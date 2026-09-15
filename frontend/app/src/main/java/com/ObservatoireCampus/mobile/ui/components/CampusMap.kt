@@ -115,13 +115,10 @@ fun CampusMap(
 }
 
 private fun drawCampusPolygons(mapView: MapView, campusList: List<CampusDto>) {
-    val fillColor = 0x332E7D32.toInt()   // Vert translucide
-    val strokeColor = 0xFF2E7D32.toInt() // Vert soutenu
+    val fillColor = 0x332E7D32.toInt()
+    val strokeColor = 0xFF2E7D32.toInt()
 
     campusList.forEach { campus ->
-        // Un campus en plusieurs blocs disjoints (MultiPolygon) a une entrée par bloc.
-        // On dessine CHAQUE partie comme un polygone séparé pour éviter la ligne
-        // parasite qui reliait les 2 blocs quand tout était mis à plat en un seul polygone.
         campus.polygonCoordinates.forEach { part ->
             if (part.size < 3) return@forEach
             val geoPoints = part.map { coord -> GeoPoint(coord[1], coord[0]) }
@@ -131,6 +128,8 @@ private fun drawCampusPolygons(mapView: MapView, campusList: List<CampusDto>) {
                 outlinePaint.color = strokeColor
                 outlinePaint.strokeWidth = 3f
                 title = campus.name
+                snippet = "Campus"
+                infoWindow = CustomInfoWindow(mapView, strokeColor)   // <-- ajouté
                 setOnClickListener { _, _, _ ->
                     InfoWindow.closeAllInfoWindowsOn(mapView)
                     showInfoWindow()

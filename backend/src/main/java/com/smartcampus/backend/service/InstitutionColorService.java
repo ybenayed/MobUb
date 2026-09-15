@@ -80,4 +80,18 @@ public class InstitutionColorService {
                 .map(c -> new InstitutionColorDTO(c.getInstitution(), c.getColor()))
                 .toList();
     }
+
+    public InstitutionColorDTO createOrUpdate(InstitutionColorDTO dto) {
+        InstitutionColor entity = institutionColorRepository.findByInstitution(dto.getInstitution())
+                .orElse(InstitutionColor.builder().institution(dto.getInstitution()).build());
+        entity.setColor(dto.getColor());
+        InstitutionColor saved = institutionColorRepository.save(entity);
+        return new InstitutionColorDTO(saved.getInstitution(), saved.getColor());
+    }
+
+    public void delete(String institution) {
+        InstitutionColor entity = institutionColorRepository.findByInstitution(institution)
+                .orElseThrow(() -> new RuntimeException("Couleur introuvable pour : " + institution));
+        institutionColorRepository.delete(entity);
+    }
 }

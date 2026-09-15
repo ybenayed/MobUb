@@ -12,6 +12,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.smartcampus.backend.dto.auth.UserStatsDTO;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import java.util.List;
 
@@ -109,5 +112,42 @@ public class UserService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Utilisateur introuvable avec l'id : " + id));
+    }
+
+    public UserStatsDTO getUserStats() {
+        List<User> all = userRepository.findAll();
+
+        long total = all.size();
+        long admins = all.stream().filter(u -> u.getRole() == User.Role.ADMIN).count();
+        long standard = total - admins;
+
+        Map<String, Long> byNationality = all.stream()
+                .map(u -> normalizeLabel(u.getNationality()))
+                .collect(Collectors.groupingBy(n -> n, Collectors.counting()));
+
+        Map<String, Long> byResidence = all.stream()
+                .map(u -> normalizeLabel(u.getResidence()))
+                .collect(Collectors.groupingBy(r -> r, Collectors.counting()));
+
+        return UserStatsDTO.builder()
+                .totalUsers(total)
+                .totalAdmins(admins)
+                .totalStandardUsers(standard)
+                .byNationality(byNationality)
+                .byResidence(byResidence)
+                .build();
+    }
+
+    /**
+     * Normalise une valeur texte libre pour l'agregation :
+     * trim + capitalisation "Titre" pour regrouper "tunisie", "Tunisie ", "TUNISIE"
+     * sous une seule cle affichable "Tunisie".
+     */
+    private String normalizeLabel(String value) {
+        if (value == null || value.isBlank()) {
+            return "Non renseigne";
+        }
+        String trimmed = value.trim().toLowerCase();
+        return Character.toUpperCase(trimmed.charAt(0)) + trimmed.substring(1);
     }
 }

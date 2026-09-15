@@ -375,16 +375,20 @@ public class OtpItineraryService {
                 }
 
                 legs.add(new LegDTO(
-                        leg.getMode(),
-                        leg.getFrom() != null ? leg.getFrom().getName() : null,
-                        leg.getTo() != null ? leg.getTo().getName() : null,
-                        parseEpochMillis(leg.getStart()),
-                        parseEpochMillis(leg.getEnd()),
-                        leg.getDistance() != null ? leg.getDistance() : 0.0,
-                        Boolean.TRUE.equals(leg.getRentedBike()),
-                        routeName,
-                        geometry
-                ));
+                    leg.getMode(),
+                    leg.getFrom() != null ? leg.getFrom().getName() : null,
+                    leg.getFrom() != null ? leg.getFrom().getLat() : 0.0,
+                    leg.getFrom() != null ? leg.getFrom().getLon() : 0.0,
+                    leg.getTo() != null ? leg.getTo().getName() : null,
+                    leg.getTo() != null ? leg.getTo().getLat() : 0.0,
+                    leg.getTo() != null ? leg.getTo().getLon() : 0.0,
+                    parseEpochMillis(leg.getStart()),
+                    parseEpochMillis(leg.getEnd()),
+                    leg.getDistance() != null ? leg.getDistance() : 0.0,
+                    Boolean.TRUE.equals(leg.getRentedBike()),
+                    routeName,
+                    geometry
+            ));
             }
         }
 

@@ -1,13 +1,11 @@
 package com.ObservatoireCampus.mobile.model.search
 
 /**
- * Corps envoyé à POST /api/itinerary (et variantes /accessible, /bicycle).
+ * Corps envoyé à POST /api/itinerary (et variante /bicycle).
  * Miroir exact de ItineraryRequestDTO.java côté backend.
- *
- * numItineraries A ETE RETIRE : le backend n'a plus ce champ, et Jackson
- * rejette par défaut les propriétés JSON inconnues (pas de
- * @JsonIgnoreProperties(ignoreUnknown = true) sur ItineraryRequestDTO.java).
- * L'envoyer provoquait potentiellement une erreur 400 sur toutes les recherches.
+ * wheelchair n'est plus jamais positionné depuis le client (PMR retire de l'app) ;
+ * le champ reste present cote backend/DTO pour ne pas casser le contrat JSON,
+ * mais toRequestDto() ne le renseigne plus jamais.
  */
 data class ItineraryRequestDto(
     val origin: SearchResultDto,
@@ -29,7 +27,6 @@ fun ItineraryFilters.toRequestDto(origin: SearchResultDto, destination: SearchRe
         modes = modes.map { it.apiValue }.ifEmpty { null },
         date = date,
         time = time,
-        arriveBy = arriveBy,
-        wheelchair = wheelchair.takeIf { it } // null si false, pour ne pas forcer le PMR par défaut
+        arriveBy = arriveBy
     )
 }

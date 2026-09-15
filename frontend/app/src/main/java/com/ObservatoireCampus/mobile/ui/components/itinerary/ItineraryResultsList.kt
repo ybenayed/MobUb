@@ -15,7 +15,10 @@ import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 fun ItineraryResultsList(
     options: List<ItineraryOptionDto>,
     selectedItinerary: ItineraryOptionDto?,
-    onOptionSelected: (ItineraryOptionDto) -> Unit,
+    onOptionClick: (ItineraryOptionDto) -> Unit,
+    savedOptionSignatures: Set<Int>,
+    savingOptionSignatures: Set<Int>,
+    onSaveClick: (ItineraryOptionDto) -> Unit,
     isLoading: Boolean,
     errorMessage: String?,
     languageViewModel: LanguageViewModel,
@@ -44,10 +47,14 @@ fun ItineraryResultsList(
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 items(options) { option ->
+                    val signature = option.hashCode()
                     ItineraryOptionCard(
                         option = option,
                         isSelected = option == selectedItinerary,
-                        onClick = { onOptionSelected(option) },
+                        onClick = { onOptionClick(option) },
+                        isSaved = signature in savedOptionSignatures,
+                        isSaving = signature in savingOptionSignatures,
+                        onSaveClick = { onSaveClick(option) },
                         languageViewModel = languageViewModel
                     )
                 }

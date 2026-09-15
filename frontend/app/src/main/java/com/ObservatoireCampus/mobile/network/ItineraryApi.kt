@@ -10,19 +10,11 @@ interface ItineraryApi {
 
     /**
      * Un seul appel, réutilisé pour les tris "rapide / moins de marche /
-     * moins de correspondances / plus écologique" : ces 4 tris ne changent pas
+     * moins de correspondances / plus écologique" : ces tris ne changent pas
      * la requête, seulement l'ordre d'affichage (fait côté client ensuite).
      */
     @POST("/api/itinerary")
     suspend fun computeItinerary(@Body request: ItineraryRequestDto): Response<List<ItineraryOptionDto>>
-
-    /**
-     * wheelchair=true dans le body change le calcul OTP lui-même (routes/quais
-     * filtrés côté serveur) : ce n'est pas juste une histoire de tri, d'où
-     * un endpoint séparé plutôt qu'un simple re-tri de /api/itinerary.
-     */
-    @POST("/api/itinerary/accessible")
-    suspend fun computeAccessibleItinerary(@Body request: ItineraryRequestDto): Response<List<ItineraryOptionDto>>
 
     /**
      * Le backend fait 3 appels OTP (profils vélo : rapide / sûr / plat) et
@@ -31,4 +23,7 @@ interface ItineraryApi {
      */
     @POST("/api/itinerary/bicycle")
     suspend fun computeBicycleItineraries(@Body request: ItineraryRequestDto): Response<List<ItineraryOptionDto>>
+
+    // L'enregistrement dans l'historique est gere par SearchHistoryApi.save(),
+    // pas ici -> evite d'avoir 2 chemins differents pour la meme action.
 }

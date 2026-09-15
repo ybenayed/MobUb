@@ -35,8 +35,10 @@ import com.ObservatoireCampus.mobile.ui.components.SearchBar
 import com.ObservatoireCampus.mobile.ui.components.TopBar
 import com.ObservatoireCampus.mobile.ui.components.ZoomControls
 import com.ObservatoireCampus.mobile.ui.components.drawItineraryRoute
+import com.ObservatoireCampus.mobile.ui.components.drawHistoryRoute
 import com.ObservatoireCampus.mobile.ui.components.clearItineraryRoute
 import com.ObservatoireCampus.mobile.ui.components.itinerary.ItineraryResultsList
+import com.ObservatoireCampus.mobile.ui.components.itinerary.ItineraryDetailsDialog
 import com.ObservatoireCampus.mobile.ui.components.weather.CurrentWeatherBadge
 import com.ObservatoireCampus.mobile.ui.components.station.StationTBBubble
 import com.ObservatoireCampus.mobile.ui.components.station.StationVBubble
@@ -70,6 +72,7 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import com.ObservatoireCampus.mobile.model.search.history.SearchHistoryDto
 import com.ObservatoireCampus.mobile.model.station.StationVPositionDto
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 import com.ObservatoireCampus.mobile.viewmodel.AppLanguage
@@ -106,6 +109,9 @@ fun MapScreen(
     onWeatherClick: (Double?, Double?) -> Unit = { _, _ -> },
     onInternshipClick: () -> Unit = {},
     onAccountClick: () -> Unit = {},
+    onHistoryClick: () -> Unit = {},
+    historyItemToShow: SearchHistoryDto? = null,
+    onHistoryItemShown: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val campusList by viewModel.campusList.collectAsState()
@@ -198,12 +204,17 @@ fun MapScreen(
     val selectedItinerary by itineraryViewModel.selectedItinerary.collectAsState()
     val isSearchingItinerary by itineraryViewModel.isSearching.collectAsState()
     val itinerarySearchError by itineraryViewModel.searchError.collectAsState()
+    val detailsItinerary by itineraryViewModel.detailsItinerary.collectAsState()
+    val savedHistorySignatures by itineraryViewModel.savedHistorySignatures.collectAsState()
+    val savingHistorySignatures by itineraryViewModel.savingHistorySignatures.collectAsState()
+    val saveHistoryMessage by itineraryViewModel.saveHistoryMessage.collectAsState()
 
     var showItineraryPanel by remember { mutableStateOf(false) }
     val itinerarySheetState = rememberModalBottomSheetState()
     var itineraryOriginMarker by remember { mutableStateOf<Marker?>(null) }
     var itineraryDestinationMarker by remember { mutableStateOf<Marker?>(null) }
     var itineraryRoutePolylines by remember { mutableStateOf<List<Polyline>>(emptyList()) }
+    var historyRoutePolylines by remember { mutableStateOf<List<Polyline>>(emptyList()) }
 
     fun hasLocationPermission(): Boolean {
         val fine = ContextCompat.checkSelfPermission(
@@ -334,6 +345,66 @@ fun MapScreen(
         clearItineraryRoute(mp, itineraryRoutePolylines)
         itineraryRoutePolylines = selectedItinerary?.let { drawItineraryRoute(mp, it) } ?: emptyList()
     }
+    LaunchedEffect(historyItemToShow, mapView) {
+        val mp = mapView ?: return@LaunchedEffect
+        val item = historyItemToShow ?: return@LaunchedEffect
+
+        fun drawAndZoom() {
+            clearItineraryRoute(mp, historyRoutePolylines)
+            historyRoutePolylines = drawHistoryRoute(mp, item)
+
+            val points = item.legs
+                .filter { it.fromLat != 0.0 && it.toLat != 0.0 }
+                .flatMap { listOf(GeoPoint(it.fromLat, it.fromLon), GeoPoint(it.toLat, it.toLon)) }
+            val distinctPoints = points.distinct()
+
+            // Garde-fou : une bounding box de largeur/hauteur quasi nulle (un seul
+            // point distinct, trajet tres court, ou vieil historique sans
+            // coordonnees) fait boucler/freezer zoomToBoundingBox() dans osmdroid.
+            // On centre manuellement dans ce cas plutot que de zoomer sur une box.
+            when {
+                distinctPoints.size >= 2 -> {
+                    val box = BoundingBox.fromGeoPoints(points)
+                    val latSpan = box.latNorth - box.latSouth
+                    val lonSpan = box.lonEast - box.lonWest
+                    if (latSpan > 0.0001 || lonSpan > 0.0001) {
+                        mp.zoomToBoundingBox(box, true, 100)
+                    } else {
+                        mp.controller.setZoom(17.0)
+                        mp.controller.animateTo(distinctPoints.first())
+                    }
+                }
+                distinctPoints.size == 1 -> {
+                    mp.controller.setZoom(17.0)
+                    mp.controller.animateTo(distinctPoints.first())
+                }
+                // sinon : vieil historique sans coordonnees valides, on ne touche pas la camera
+            }
+            onHistoryItemShown()
+        }
+
+        // La MapView vient parfois d'etre recreee (retour depuis l'Historique) et n'a
+        // pas encore ete mesuree par Android : zoomToBoundingBox() ne fait rien tant
+        // que width/height valent 0. On attend le premier passage de layout reel.
+        if (mp.width > 0 && mp.height > 0) {
+            drawAndZoom()
+        } else {
+            mp.viewTreeObserver.addOnGlobalLayoutListener(object : android.view.ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    mp.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    drawAndZoom()
+                }
+            })
+        }
+    }
+
+    // Toast simple apres tentative d'enregistrement dans l'historique.
+    LaunchedEffect(saveHistoryMessage) {
+        saveHistoryMessage?.let { msg ->
+            android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
+            itineraryViewModel.clearSaveHistoryMessage()
+        }
+    }
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -392,6 +463,10 @@ fun MapScreen(
                     scope.launch { drawerState.close() }
                     showItineraryPanel = true
                 },
+                onHistoryClick = {
+                    scope.launch { drawerState.close() }
+                    onHistoryClick()
+                },
                 onBackToMap = { scope.launch { drawerState.close() } },
                 onLogout = {
                     scope.launch { drawerState.close() }
@@ -405,26 +480,35 @@ fun MapScreen(
                 .fillMaxSize()
                 .background(ObcampusBackground)
         ) {
-            key(displayedCampusList) {
-                CampusMap(
-                    campusList = displayedCampusList,
-                    showPolygons = showCampus,
-                    languageViewModel = languageViewModel,
-                    batimentList = batimentList,
-                    parkingList = visibleParking,
-                    onParkingClick = { parkingViewModel.onParkingClicked(it.id) },
-                    stationTBList = visibleStationsTB,
-                    onStationTBClick = { stationTBViewModel.onStationClicked(it) },
-                    stationVList = visibleStationsV,
-                    onStationVClick = { stationVViewModel.onStationClicked(it) },
-                    stationTerList = visibleStationsTer,
-                    onStationTerClick = { stationTerViewModel.onStationClicked(it) },
-                    freeVehicleList = visibleFreeVehicles,
-                    onFreeVehicleClick = { freeVehicleViewModel.onVehicleClicked(it.bikeId) },
-                    onMapReady = { mapView = it },
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
+            // CORRECTIF : le key(displayedCampusList) qui entourait cet appel a ete
+            // retire. displayedCampusList change de reference a chaque traduction
+            // (LaunchedEffect(currentLanguage, campusList) cree une nouvelle liste),
+            // et key() detruisait alors ENTIEREMENT CampusMap -> demontait la MapView
+            // osmdroid en cours et en remontait une nouvelle. Si ca se produisait juste
+            // apres un retour depuis l'Historique, le listener de layout pose sur
+            // l'ancienne MapView (dans le LaunchedEffect(historyItemToShow, mapView)
+            // de ce fichier) ne se declenchait jamais car une vue detachee n'emet plus
+            // d'evenements de layout -> "Voir sur la carte" ne dessinait jamais rien.
+            // CampusMap reagit deja en interne aux changements de campusList via son
+            // propre LaunchedEffect, pas besoin de le detruire/recreer pour ca.
+            CampusMap(
+                campusList = displayedCampusList,
+                showPolygons = showCampus,
+                languageViewModel = languageViewModel,
+                batimentList = batimentList,
+                parkingList = visibleParking,
+                onParkingClick = { parkingViewModel.onParkingClicked(it.id) },
+                stationTBList = visibleStationsTB,
+                onStationTBClick = { stationTBViewModel.onStationClicked(it) },
+                stationVList = visibleStationsV,
+                onStationVClick = { stationVViewModel.onStationClicked(it) },
+                stationTerList = visibleStationsTer,
+                onStationTerClick = { stationTerViewModel.onStationClicked(it) },
+                freeVehicleList = visibleFreeVehicles,
+                onFreeVehicleClick = { freeVehicleViewModel.onVehicleClicked(it.bikeId) },
+                onMapReady = { mapView = it },
+                modifier = Modifier.fillMaxSize()
+            )
 
             TopBar(
                 languageViewModel = languageViewModel,
@@ -503,7 +587,6 @@ fun MapScreen(
                             filters = itineraryFilters,
                             onModeToggle = itineraryViewModel::toggleMode,
                             onTimeChange = itineraryViewModel::updateTimeFilter,
-                            onWheelchairToggle = itineraryViewModel::toggleWheelchair,
                             onSortChange = itineraryViewModel::updateSortOption,
                             canSearch = originPoint != null && destinationPoint != null,
                             onSearchClick = {
@@ -519,7 +602,8 @@ fun MapScreen(
 
                                         val newOriginMarker = Marker(mp).apply {
                                             position = originGeoPoint
-                                            title = origin.name
+                                            title = if (origin.name == com.ObservatoireCampus.mobile.model.search.CURRENT_LOCATION_MARKER)
+                                                translatedUserLocationPinTitle else origin.name
                                             snippet = origin.subtitle
                                             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                                             icon = createOriginMarkerIcon(mp.context)
@@ -527,7 +611,8 @@ fun MapScreen(
                                         }
                                         val newDestinationMarker = Marker(mp).apply {
                                             position = destinationGeoPoint
-                                            title = destination.name
+                                            title = if (destination.name == com.ObservatoireCampus.mobile.model.search.CURRENT_LOCATION_MARKER)
+                                                translatedUserLocationPinTitle else destination.name
                                             snippet = destination.subtitle
                                             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
                                             icon = createSearchResultMarkerIcon(mp.context)
@@ -566,10 +651,10 @@ fun MapScreen(
                         ItineraryResultsList(
                             options = sortedItineraryOptions,
                             selectedItinerary = selectedItinerary,
-                            onOptionSelected = {
-                                itineraryViewModel.selectItinerary(it)
-                                showItineraryPanel = false
-                            },
+                            onOptionClick = { itineraryViewModel.showItineraryDetails(it) },
+                            savedOptionSignatures = savedHistorySignatures,
+                            savingOptionSignatures = savingHistorySignatures,
+                            onSaveClick = { itineraryViewModel.saveToHistory(it) },
                             isLoading = isSearchingItinerary,
                             errorMessage = itinerarySearchError,
                             languageViewModel = languageViewModel
@@ -767,6 +852,19 @@ fun MapScreen(
                         )
                     }
                 }
+            }
+
+            detailsItinerary?.let { option ->
+                ItineraryDetailsDialog(
+                    option = option,
+                    onDismiss = { itineraryViewModel.dismissItineraryDetails() },
+                    onViewOnMap = {
+                        itineraryViewModel.selectItinerary(option)
+                        itineraryViewModel.dismissItineraryDetails()
+                        showItineraryPanel = false
+                    },
+                    languageViewModel = languageViewModel
+                )
             }
         }
     }

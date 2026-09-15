@@ -1,18 +1,11 @@
 package com.smartcampus.backend.dto.search;
 
-/**
- * Représente un résultat de recherche de lieu (géocodage).
- * Miroir exact de SearchResultDto.kt côté Android :
- * - name      : titre court (ex: "Kedge Business School")
- * - subtitle  : complément d'adresse (ex: "Talence, Gironde")
- * - latitude / longitude : coordonnées pour positionner le marqueur
- */
 public class SearchResultDTO {
 
     private String name;
     private String subtitle;
-    private double latitude;
-    private double longitude;
+    private Double latitude;
+    private Double longitude;
 
     public SearchResultDTO() {
     }
@@ -40,19 +33,19 @@ public class SearchResultDTO {
         this.subtitle = subtitle;
     }
 
-    public double getLatitude() {
+    public Double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(double latitude) {
+    public void setLatitude(Double latitude) {
         this.latitude = latitude;
     }
 
-    public double getLongitude() {
+    public Double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(double longitude) {
+    public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
 }

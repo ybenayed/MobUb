@@ -64,7 +64,8 @@ class LocationViewModel(
     fun fetchLocation() {
         _isActive.value = true
         _locationState.value = LocationUiState.Loading
-        _bubbleVisible.value = true // on ouvre direct la bulle (avec spinner) au clic
+        // La bulle ne s'ouvre plus ici : elle ne doit s'afficher que si l'utilisateur
+        // clique sur le marqueur "Ma position" sur la carte (voir onMarkerClicked()).
 
         fusedLocationClient.lastLocation
             .addOnSuccessListener { location ->

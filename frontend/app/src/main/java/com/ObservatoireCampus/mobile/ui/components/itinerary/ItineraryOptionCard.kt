@@ -5,7 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Accessible
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.CompareArrows
 import androidx.compose.material.icons.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Park
@@ -25,15 +26,22 @@ fun ItineraryOptionCard(
     option: ItineraryOptionDto,
     isSelected: Boolean,
     onClick: () -> Unit,
+    isSaved: Boolean,
+    isSaving: Boolean,
+    onSaveClick: () -> Unit,
     languageViewModel: LanguageViewModel,
     modifier: Modifier = Modifier
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
 
     var translatedProfileLabel by remember { mutableStateOf(option.profileLabel) }
+    var translatedSave by remember { mutableStateOf("Enregistrer") }
+    var translatedSaved by remember { mutableStateOf("Enregistré") }
 
     LaunchedEffect(currentLanguage, option.profileLabel) {
         translatedProfileLabel = option.profileLabel?.let { languageViewModel.translate(it) }
+        translatedSave = languageViewModel.translate("Enregistrer")
+        translatedSaved = languageViewModel.translate("Enregistré")
     }
 
     Card(
@@ -105,12 +113,38 @@ fun ItineraryOptionCard(
                     text = ItineraryFormat.co2(option.co2Grams),
                     tint = co2Tint(option.co2Grams)
                 )
-                if (option.accessibilityScore > 0.0) {
-                    MetricBadge(
-                        icon = Icons.Default.Accessible,
-                        text = "${(option.accessibilityScore * 100).toInt()}%",
-                        tint = ObcampusPrimary
-                    )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Bouton "Enregistrer" : clic sur le bouton uniquement, ne declenche
+            // pas onClick() de la Card (le Button interne consomme le tap).
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                when {
+                    isSaving -> CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                    isSaved -> TextButton(onClick = {}, enabled = false) {
+                        Icon(
+                            imageVector = Icons.Default.Bookmark,
+                            contentDescription = null,
+                            tint = ObcampusPrimary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(translatedSaved, color = ObcampusPrimary, style = MaterialTheme.typography.labelMedium)
+                    }
+                    else -> TextButton(onClick = onSaveClick) {
+                        Icon(
+                            imageVector = Icons.Default.BookmarkBorder,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(translatedSave, style = MaterialTheme.typography.labelMedium)
+                    }
                 }
             }
         }

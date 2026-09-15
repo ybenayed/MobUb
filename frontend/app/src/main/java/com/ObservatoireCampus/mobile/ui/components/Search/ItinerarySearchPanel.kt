@@ -35,7 +35,6 @@ fun ItinerarySearchPanel(
     filters: ItineraryFilters,
     onModeToggle: (TransportModeUi) -> Unit,
     onTimeChange: (date: String?, time: String?, arriveBy: Boolean) -> Unit,
-    onWheelchairToggle: () -> Unit,
     onSortChange: (ItinerarySortOption) -> Unit,
     canSearch: Boolean,
     onSearchClick: () -> Unit,
@@ -118,7 +117,6 @@ fun ItinerarySearchPanel(
             filters = filters,
             onModeToggle = onModeToggle,
             onTimeChange = onTimeChange,
-            onWheelchairToggle = onWheelchairToggle,
             onSortChange = onSortChange,
             languageViewModel = languageViewModel,
             modifier = Modifier.padding(horizontal = 0.dp)

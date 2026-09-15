@@ -57,4 +57,5 @@ object RetrofitClient {
     // Pratique pour AuthRepository, qui a aussi besoin du TokenManager
     // (pour lire isLoggedIn() / logout() sans dupliquer le SharedPreferences).
     fun getTokenManager(): TokenManager = tokenManager
+    val searchHistoryApi: SearchHistoryApi by lazy { retrofit.create(SearchHistoryApi::class.java) }
 }

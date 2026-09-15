@@ -169,24 +169,25 @@ fun DrawerMenu(
                 languageViewModel = languageViewModel,
                 currentLanguage = currentLanguage
             )
-
+        }
             // METEO : simple raccourci de navigation, comme Itineraire/Historique
-            // (la case "Bornes electriques" a ete retiree : elle ne faisait rien).
+// --- SECTION BASSE (STATIQUE, TOUJOURS VISIBLE) ---
+            HorizontalDivider()
+
+            // METEO : deplacee au-dessus d'Itineraire/Historique comme demande
             DrawerNavigationRow(
                 icon = Icons.Default.Cloud,
                 label = translatedMeteoLabel,
                 onClick = onWeatherClick
             )
-        }
 
-        // --- SECTION BASSE (STATIQUE, TOUJOURS VISIBLE) ---
-        HorizontalDivider()
+            HorizontalDivider()
 
-        DrawerNavigationRow(
-            icon = Icons.Default.Directions,
-            label = translatedItineraryLabel,
-            onClick = onItineraryClick
-        )
+            DrawerNavigationRow(
+                icon = Icons.Default.Directions,
+                label = translatedItineraryLabel,
+                onClick = onItineraryClick
+            )
 
         HorizontalDivider()
 

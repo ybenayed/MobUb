@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.backend.dto.parking.*;
 import com.smartcampus.backend.entity.parking.Parking;
+import com.smartcampus.backend.exception.ResourceNotFoundException;
 import com.smartcampus.backend.mapper.parking.ParkingMapper;
 import com.smartcampus.backend.repository.parking.ParkingRepository;
 import lombok.RequiredArgsConstructor;
@@ -196,4 +197,76 @@ public class ParkingService {
     private Double getDouble(JsonNode node, String field) {
         return node.hasNonNull(field) ? node.get(field).asDouble() : null;
     }
+
+    public ParkingDTO createParking(ParkingRequestDTO request) {
+    if (parkingRepository.existsByIdent(request.getIdent())) {
+        throw new IllegalArgumentException("Un parking avec cet identifiant existe deja : " + request.getIdent());
+    }
+    Parking parking = applyRequest(new Parking(), request);
+    return parkingMapper.toDTO(parkingRepository.save(parking));
+}
+
+public ParkingDTO updateParking(Long id, ParkingRequestDTO request) {
+    Parking parking = parkingRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Parking introuvable : " + id));
+    applyRequest(parking, request);
+    return parkingMapper.toDTO(parkingRepository.save(parking));
+}
+
+public void deleteParking(Long id) {
+    if (!parkingRepository.existsById(id)) {
+        throw new ResourceNotFoundException("Parking introuvable : " + id);
+    }
+    parkingRepository.deleteById(id);
+}
+
+private Parking applyRequest(Parking p, ParkingRequestDTO r) {
+    Point location = (r.getLatitude() != null && r.getLongitude() != null)
+            ? geometryFactory.createPoint(new Coordinate(r.getLongitude(), r.getLatitude()))
+            : null;
+
+    p.setIdent(r.getIdent());
+    p.setNom(r.getNom());
+    p.setAdresse(r.getAdresse());
+    p.setExploit(r.getExploit());
+    p.setInfor(r.getInfor());
+    p.setTaType(r.getTaType());
+    p.setType(r.getType());
+    p.setLatitude(r.getLatitude());
+    p.setLongitude(r.getLongitude());
+    p.setLocation(location);
+    p.setNpTotal(r.getNpTotal());
+    p.setNpGlobal(r.getNpGlobal());
+    p.setNpPmr(r.getNpPmr());
+    p.setNpVle(r.getNpVle());
+    p.setNpVeltot(r.getNpVeltot());
+    p.setNpVelec(r.getNpVelec());
+    p.setNp2rmot(r.getNp2rmot());
+    p.setNpCovoit(r.getNpCovoit());
+    p.setThQuar(r.getThQuar());
+    p.setThDemi(r.getThDemi());
+    p.setThHeur(r.getThHeur());
+    p.setTh2(r.getTh2());
+    p.setTh3(r.getTh3());
+    p.setTh4(r.getTh4());
+    p.setTh10(r.getTh10());
+    p.setTh24(r.getTh24());
+    p.setThNuit(r.getThNuit());
+    p.setTaTitul(r.getTaTitul());
+    p.setTaNtitul(r.getTaNtitul());
+    p.setTaResmoi(r.getTaResmoi());
+    p.setTaNres7j(r.getTaNres7j());
+    p.setTaMoimot(r.getTaMoimot());
+    p.setTaMoivel(r.getTaMoivel());
+    p.setTaHandi(r.getTaHandi());
+    p.setAnServ(r.getAnServ());
+    p.setSecteur(r.getSecteur());
+    p.setPropr(r.getPropr());
+    p.setTypgest(r.getTypgest());
+    p.setNbNiv(r.getNbNiv());
+    p.setGabariStd(r.getGabariStd());
+    p.setGabariMax(r.getGabariMax());
+    p.setUrl(r.getUrl());
+    return p;
+}
 }

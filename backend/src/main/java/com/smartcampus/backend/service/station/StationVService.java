@@ -3,8 +3,10 @@ package com.smartcampus.backend.service.station;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smartcampus.backend.dto.station.StationVDTO;
+import com.smartcampus.backend.dto.station.StationVRequestDTO;
 import com.smartcampus.backend.dto.station.StationPositionVDTO;
 import com.smartcampus.backend.entity.station.StationV;
+import com.smartcampus.backend.exception.ResourceNotFoundException;
 import com.smartcampus.backend.mapper.station.StationVMapper;
 import com.smartcampus.backend.repository.station.StationVRepository;
 import lombok.RequiredArgsConstructor;
@@ -99,5 +101,46 @@ public class StationVService {
                 .longitude(lon)
                 .location(point)
                 .build();
+    }
+
+
+    public StationVDTO createStation(StationVRequestDTO request) {
+        if (stationVRepository.existsByStationId(request.getStationId())) {
+            throw new IllegalArgumentException("Une station avec cet identifiant existe deja : " + request.getStationId());
+        }
+        StationV station = StationV.builder()
+                .stationId(request.getStationId())
+                .nom(request.getNom())
+                .adresse(request.getAdresse())
+                .capacite(request.getCapacite())
+                .latitude(request.getLatitude())
+                .longitude(request.getLongitude())
+                .location(toPoint(request.getLatitude(), request.getLongitude()))
+                .build();
+        return stationVMapper.toDTO(stationVRepository.save(station));
+    }
+
+    public StationVDTO updateStation(Long id, StationVRequestDTO request) {
+        StationV station = stationVRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Station velo introuvable : " + id));
+        station.setNom(request.getNom());
+        station.setAdresse(request.getAdresse());
+        station.setCapacite(request.getCapacite());
+        station.setLatitude(request.getLatitude());
+        station.setLongitude(request.getLongitude());
+        station.setLocation(toPoint(request.getLatitude(), request.getLongitude()));
+        return stationVMapper.toDTO(stationVRepository.save(station));
+    }
+
+    public void deleteStation(Long id) {
+        if (!stationVRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Station velo introuvable : " + id);
+        }
+        stationVRepository.deleteById(id);
+    }
+
+    private Point toPoint(Double lat, Double lon) {
+        if (lat == null || lon == null) return null;
+        return geometryFactory.createPoint(new Coordinate(lon, lat));
     }
 }
