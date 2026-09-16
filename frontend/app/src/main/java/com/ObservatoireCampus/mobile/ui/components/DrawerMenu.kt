@@ -29,6 +29,7 @@ import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 @Composable
 fun DrawerMenu(
     languageViewModel: LanguageViewModel,
+    isAdmin: Boolean = false,   // AJOUT : bascule le menu USER / ADMIN
     parkingLayers: List<LayerItemUiState>,
     parkingMasterActive: Boolean,
     parkingExpanded: Boolean,
@@ -65,8 +66,12 @@ fun DrawerMenu(
     onWeatherClick: () -> Unit = {},
     onInternshipClick: () -> Unit = {},
     onItineraryClick: () -> Unit = {},
-    onHistoryClick: () -> Unit = {},   // AJOUT : ouvre l'historique de recherche
-    onAccountClick: () -> Unit = {},   // AJOUT : ouvre "Mon compte" (profil + mdp)
+    onHistoryClick: () -> Unit = {},
+    onAccountClick: () -> Unit = {},
+    // AJOUT : actions reservees a l'admin
+    onUserManagementClick: () -> Unit = {},
+    onInfrastructureClick: () -> Unit = {},
+    onLegendsClick: () -> Unit = {},
     onBackToMap: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
@@ -77,6 +82,11 @@ fun DrawerMenu(
     var translatedLogoutLabel by remember { mutableStateOf("Déconnexion") }
     var translatedBackLabel by remember { mutableStateOf("Retour") }
 
+    // AJOUT : libelles admin
+    var translatedUserManagementLabel by remember { mutableStateOf("Gestion des utilisateurs") }
+    var translatedInfrastructureLabel by remember { mutableStateOf("Infrastructures") }
+    var translatedLegendsLabel by remember { mutableStateOf("Légendes") }
+
     LaunchedEffect(currentLanguage) {
         translatedMeteoLabel = languageViewModel.translate("Météo")
         translatedItineraryLabel = languageViewModel.translate("Itinéraire")
@@ -84,6 +94,9 @@ fun DrawerMenu(
         translatedAccountLabel = languageViewModel.translate("Mon compte")
         translatedLogoutLabel = languageViewModel.translate("Déconnexion")
         translatedBackLabel = languageViewModel.translate("Retour")
+        translatedUserManagementLabel = languageViewModel.translate("Gestion des utilisateurs")
+        translatedInfrastructureLabel = languageViewModel.translate("Infrastructures")
+        translatedLegendsLabel = languageViewModel.translate("Légendes")
     }
 
     ModalDrawerSheet(
@@ -108,7 +121,7 @@ fun DrawerMenu(
 
         HorizontalDivider()
 
-        // Conteneur deroulant : couches de la carte
+        // Conteneur deroulant : couches de la carte (communes admin + user)
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -170,33 +183,58 @@ fun DrawerMenu(
                 currentLanguage = currentLanguage
             )
         }
-            // METEO : simple raccourci de navigation, comme Itineraire/Historique
-// --- SECTION BASSE (STATIQUE, TOUJOURS VISIBLE) ---
-            HorizontalDivider()
 
-            // METEO : deplacee au-dessus d'Itineraire/Historique comme demande
+        // --- SECTION BASSE (STATIQUE, TOUJOURS VISIBLE) ---
+        HorizontalDivider()
+
+        // METEO : commune admin + user
+        DrawerNavigationRow(
+            icon = Icons.Default.Cloud,
+            label = translatedMeteoLabel,
+            onClick = onWeatherClick
+        )
+
+        HorizontalDivider()
+
+        if (isAdmin) {
+            // --- MENU ADMIN ---
             DrawerNavigationRow(
-                icon = Icons.Default.Cloud,
-                label = translatedMeteoLabel,
-                onClick = onWeatherClick
+                icon = Icons.Default.ManageAccounts,
+                label = translatedUserManagementLabel,
+                onClick = onUserManagementClick
             )
 
             HorizontalDivider()
 
+            DrawerNavigationRow(
+                icon = Icons.Default.Build,
+                label = translatedInfrastructureLabel,
+                onClick = onInfrastructureClick
+            )
+
+            HorizontalDivider()
+
+            DrawerNavigationRow(
+                icon = Icons.Default.Palette,
+                label = translatedLegendsLabel,
+                onClick = onLegendsClick
+            )
+        } else {
+            // --- MENU UTILISATEUR (inchange) ---
             DrawerNavigationRow(
                 icon = Icons.Default.Directions,
                 label = translatedItineraryLabel,
                 onClick = onItineraryClick
             )
 
-        HorizontalDivider()
+            HorizontalDivider()
 
-        // AJOUT : Historique des recherches
-        DrawerNavigationRow(
-            icon = Icons.Default.History,
-            label = translatedHistoryLabel,
-            onClick = onHistoryClick
-        )
+            DrawerNavigationRow(
+                icon = Icons.Default.History,
+                label = translatedHistoryLabel,
+                onClick = onHistoryClick
+            )
+        }
 
         HorizontalDivider()
 
@@ -209,14 +247,16 @@ fun DrawerMenu(
 
         HorizontalDivider()
 
-        // AJOUT : "Mon compte" (coordonnees utilisateur + changement de mot de passe)
-        DrawerNavigationRow(
-            icon = Icons.Default.AccountCircle,
-            label = translatedAccountLabel,
-            onClick = onAccountClick
-        )
+        if (!isAdmin) {
+            // "Mon compte" reserve a l'utilisateur normal (l'admin n'a pas de profil a editer ici)
+            DrawerNavigationRow(
+                icon = Icons.Default.AccountCircle,
+                label = translatedAccountLabel,
+                onClick = onAccountClick
+            )
 
-        HorizontalDivider()
+            HorizontalDivider()
+        }
 
         AboutDrawerSection(
             languageViewModel = languageViewModel,
@@ -241,11 +281,6 @@ fun DrawerMenu(
     }
 }
 
-/**
- * Ligne de navigation generique du tiroir (icone + label + fleche), utilisee
- * pour Itineraire / Historique / Meteo / Mon compte : evite de dupliquer le
- * meme Row 4 fois.
- */
 @Composable
 private fun DrawerNavigationRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,

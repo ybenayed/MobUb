@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/stations")
@@ -32,6 +33,11 @@ public class AdminStationController {
     public ResponseEntity<Void> deleteV(@PathVariable Long id) {
         stationVService.deleteStation(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/v")
+    public ResponseEntity<List<StationVDTO>> getAllOrSearchV(@RequestParam(required = false) String query) {
+        return ResponseEntity.ok(stationVService.searchStations(query));
     }
 
     @PostMapping("/ter")

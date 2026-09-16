@@ -30,6 +30,9 @@ import com.ObservatoireCampus.mobile.viewmodel.AuthUiState
 import com.ObservatoireCampus.mobile.viewmodel.AuthViewModel
 import com.ObservatoireCampus.mobile.viewmodel.AuthViewModelFactory
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
+import com.ObservatoireCampus.mobile.ui.screens.admin.AdminUsersScreen
+import com.ObservatoireCampus.mobile.ui.screens.admin.AdminInfrastructureScreen
+import com.ObservatoireCampus.mobile.ui.screens.admin.AdminLegendsScreen
 
 @Composable
 fun AppNavHost(
@@ -148,16 +151,45 @@ fun AppNavHost(
                 onHistoryClick = {
                     navController.navigate(Screen.History.route)
                 },
+                // AJOUT : navigation admin
+                onUserManagementClick = {
+                    navController.navigate(Screen.AdminUsers.route)
+                },
+                onInfrastructureClick = {
+                    navController.navigate(Screen.AdminInfrastructure.route)
+                },
+                onLegendsClick = {
+                    navController.navigate(Screen.AdminLegends.route)
+                },
                 historyItemToShow = pendingHistoryItem,
                 onHistoryItemShown = { pendingHistoryItem = null },
                 onLogout = {
-                    // Seul endroit ou le token doit etre efface : demande EXPLICITE
-                    // de l'utilisateur via le menu (bouton Deconnexion).
                     RetrofitClient.getTokenManager().clearToken()
                     navController.navigate(Screen.Login.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Screen.AdminUsers.route) {
+            AdminUsersScreen(
+                languageViewModel = languageViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.AdminInfrastructure.route) {
+            AdminInfrastructureScreen(
+                languageViewModel = languageViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Screen.AdminLegends.route) {
+            AdminLegendsScreen(
+                languageViewModel = languageViewModel,
+                onBack = { navController.popBackStack() }
             )
         }
 

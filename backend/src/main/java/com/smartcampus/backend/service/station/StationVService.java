@@ -123,12 +123,21 @@ public class StationVService {
     public StationVDTO updateStation(Long id, StationVRequestDTO request) {
         StationV station = stationVRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Station velo introuvable : " + id));
+
+        // Vérifier si le stationId est déjà utilisé par une *autre* station
+        Optional<StationV> existingWithSameStationId = stationVRepository.findByStationId(request.getStationId());
+        if (existingWithSameStationId.isPresent() && !existingWithSameStationId.get().getId().equals(id)) {
+            throw new IllegalArgumentException("Une autre station utilise déjà l'identifiant : " + request.getStationId());
+        }
+
+        station.setStationId(request.getStationId());
         station.setNom(request.getNom());
         station.setAdresse(request.getAdresse());
         station.setCapacite(request.getCapacite());
         station.setLatitude(request.getLatitude());
         station.setLongitude(request.getLongitude());
         station.setLocation(toPoint(request.getLatitude(), request.getLongitude()));
+
         return stationVMapper.toDTO(stationVRepository.save(station));
     }
 
@@ -142,5 +151,13 @@ public class StationVService {
     private Point toPoint(Double lat, Double lon) {
         if (lat == null || lon == null) return null;
         return geometryFactory.createPoint(new Coordinate(lon, lat));
+    }
+
+
+    public List<StationVDTO> searchStations(String query) {
+        List<StationV> stations = (query == null || query.isBlank())
+                ? stationVRepository.findAll()
+                : stationVRepository.findByNomContainingIgnoreCase(query);
+        return stations.stream().map(stationVMapper::toDTO).toList();
     }
 }

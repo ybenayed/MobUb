@@ -9,6 +9,7 @@ class TokenManager(context: Context) {
 
     companion object {
         private const val KEY_JWT_TOKEN = "jwt_token"
+        private const val KEY_ROLE = "user_role"
     }
 
     fun saveToken(token: String) {
@@ -20,8 +21,18 @@ class TokenManager(context: Context) {
     }
 
     fun clearToken() {
-        prefs.edit().remove(KEY_JWT_TOKEN).apply()
+        prefs.edit().remove(KEY_JWT_TOKEN).remove(KEY_ROLE).apply()
     }
 
     fun hasToken(): Boolean = !getToken().isNullOrEmpty()
+
+    fun saveRole(role: String) {
+        prefs.edit().putString(KEY_ROLE, role).apply()
+    }
+
+    fun getRole(): String? {
+        return prefs.getString(KEY_ROLE, null)
+    }
+
+    fun isAdmin(): Boolean = getRole() == "ADMIN"
 }

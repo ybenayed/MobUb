@@ -21,6 +21,7 @@ class AuthRepository(
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
                 tokenManager.saveToken(authResponse.token)
+                tokenManager.saveRole(authResponse.user.role)   // AJOUT
                 Result.success(authResponse)
             } else {
                 Result.failure(Exception("Identifiants incorrects ou erreur serveur (${response.code()})"))
@@ -36,6 +37,7 @@ class AuthRepository(
             if (response.isSuccessful && response.body() != null) {
                 val authResponse = response.body()!!
                 tokenManager.saveToken(authResponse.token)
+                tokenManager.saveRole(authResponse.user.role)   // AJOUT
                 Result.success(authResponse)
             } else {
                 Result.failure(Exception("Erreur lors de l'inscription (${response.code()})"))
@@ -44,6 +46,9 @@ class AuthRepository(
             Result.failure(e)
         }
     }
+
+    // AJOUT : expose le rôle stocké, utilisé par DrawerMenu pour choisir le bon menu
+    fun isAdmin(): Boolean = tokenManager.isAdmin()
 
     suspend fun getCurrentUser(): Result<UserDto> {
         return try {

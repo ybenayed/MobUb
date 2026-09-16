@@ -19,4 +19,5 @@ public interface StationVRepository extends JpaRepository<StationV, Long> {
         FROM StationV s
         """)
     List<StationPositionVDTO> findAllPositions();
+    List<StationV> findByNomContainingIgnoreCase(String nom);
 }

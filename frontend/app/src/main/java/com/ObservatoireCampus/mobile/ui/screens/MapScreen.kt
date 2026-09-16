@@ -17,7 +17,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.*
-
+import com.ObservatoireCampus.mobile.network.RetrofitClient
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -112,6 +112,9 @@ fun MapScreen(
     onHistoryClick: () -> Unit = {},
     historyItemToShow: SearchHistoryDto? = null,
     onHistoryItemShown: () -> Unit = {},
+    onUserManagementClick: () -> Unit = {},
+    onInfrastructureClick: () -> Unit = {},
+    onLegendsClick: () -> Unit = {},
     onLogout: () -> Unit = {}
 ) {
     val campusList by viewModel.campusList.collectAsState()
@@ -180,6 +183,7 @@ fun MapScreen(
 
     // Localisation utilisateur
     val context = LocalContext.current
+    val isAdmin = remember { RetrofitClient.getTokenManager().isAdmin() }
     val locationViewModel: LocationViewModel = viewModel(
         factory = LocationViewModelFactory(LocationServices.getFusedLocationProviderClient(context))
     )
@@ -412,6 +416,7 @@ fun MapScreen(
         drawerContent = {
             DrawerMenu(
                 languageViewModel = languageViewModel,
+                isAdmin = isAdmin,
                 parkingLayers = parkingLayers,
                 parkingMasterActive = parkingViewModel.masterActive,
                 parkingExpanded = parkingExpanded,
@@ -466,6 +471,18 @@ fun MapScreen(
                 onHistoryClick = {
                     scope.launch { drawerState.close() }
                     onHistoryClick()
+                },
+                onUserManagementClick = {
+                    scope.launch { drawerState.close() }
+                    onUserManagementClick()
+                },
+                onInfrastructureClick = {
+                    scope.launch { drawerState.close() }
+                    onInfrastructureClick()
+                },
+                onLegendsClick = {
+                    scope.launch { drawerState.close() }
+                    onLegendsClick()
                 },
                 onBackToMap = { scope.launch { drawerState.close() } },
                 onLogout = {

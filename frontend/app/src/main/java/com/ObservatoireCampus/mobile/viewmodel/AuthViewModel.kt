@@ -30,6 +30,10 @@ class AuthViewModel(
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+    // AJOUT : etat global admin/user, lu au demarrage du ViewModel
+    private val _isAdmin = MutableStateFlow(authRepository.isAdmin())
+    val isAdmin: StateFlow<Boolean> = _isAdmin.asStateFlow()
+
     fun login(username: String, email: String, pass: String) {
         viewModelScope.launch {
             _uiState.value = AuthUiState.Loading
@@ -37,6 +41,7 @@ class AuthViewModel(
             val result = authRepository.login(request)
 
             result.onSuccess {
+                _isAdmin.value = authRepository.isAdmin()   // AJOUT : refresh apres login
                 _uiState.value = AuthUiState.Success(it)
             }.onFailure { error ->
                 val translatedError = languageViewModel.translate(error.message ?: "Erreur de connexion")
