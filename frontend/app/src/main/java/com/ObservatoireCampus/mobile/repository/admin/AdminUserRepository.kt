@@ -2,6 +2,7 @@ package com.ObservatoireCampus.mobile.repository.admin
 
 import com.ObservatoireCampus.mobile.model.auth.UserDto
 import com.ObservatoireCampus.mobile.network.AdminUserApi
+import com.ObservatoireCampus.mobile.model.admin.AdminDashboardStatsDto
 
 class AdminUserRepository(private val api: AdminUserApi) {
 
@@ -25,6 +26,19 @@ class AdminUserRepository(private val api: AdminUserApi) {
                 Result.success(Unit)
             } else {
                 Result.failure(Exception("Erreur lors de la suppression (${response.code()})"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getDashboardStats(): Result<AdminDashboardStatsDto> {
+        return try {
+            val response = api.getDashboardStats()
+            if (response.isSuccessful && response.body() != null) {
+                Result.success(response.body()!!)
+            } else {
+                Result.failure(Exception("Erreur chargement statistiques (${response.code()})"))
             }
         } catch (e: Exception) {
             Result.failure(e)

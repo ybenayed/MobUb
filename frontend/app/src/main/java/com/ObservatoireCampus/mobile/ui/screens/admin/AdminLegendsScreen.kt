@@ -2,10 +2,13 @@ package com.ObservatoireCampus.mobile.ui.screens.admin
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import com.ObservatoireCampus.mobile.ui.components.TopBar
+import com.ObservatoireCampus.mobile.ui.components.admin.AdminColorsTab
+import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,11 +22,17 @@ fun AdminLegendsScreen(
             TopBar(languageViewModel = languageViewModel, onMenuClick = onBack, isBackButton = true)
         }
     ) { padding ->
-        Box(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
-            Text("Gestion des legendes — a venir")
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+
+            Text(
+                text = "Légendes",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineSmall,
+                color = ObcampusPrimary,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+            )
+
+            AdminColorsTab(strings = com.ObservatoireCampus.mobile.ui.screens.admin.InfraStrings())
         }
     }
 }

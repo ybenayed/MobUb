@@ -1,6 +1,7 @@
 package com.ObservatoireCampus.mobile.network
 
 import com.ObservatoireCampus.mobile.model.auth.UserDto
+import com.ObservatoireCampus.mobile.model.admin.AdminDashboardStatsDto
 import retrofit2.Response
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -14,4 +15,7 @@ interface AdminUserApi {
 
     @DELETE("api/admin/users/{id}")
     suspend fun deleteUser(@Path("id") id: Long): Response<Unit>
+
+    @GET("api/admin/dashboard/stats")
+    suspend fun getDashboardStats(): Response<AdminDashboardStatsDto>
 }

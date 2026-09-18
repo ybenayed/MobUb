@@ -7,7 +7,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 object RetrofitClient {
-    private const val BASE_URL = "http://10.87.132.195:8080/"
+    private const val BASE_URL = "http://10.178.47.195:8080/"
 
     private lateinit var tokenManager: TokenManager
 
@@ -61,4 +61,6 @@ object RetrofitClient {
 
     val adminUserApi: AdminUserApi by lazy { retrofit.create(AdminUserApi::class.java) }
     val adminInfrastructureApi: AdminInfrastructureApi by lazy { retrofit.create(AdminInfrastructureApi::class.java) }
+
+    val adminLegendApi: AdminLegendApi by lazy { retrofit.create(AdminLegendApi::class.java) }
 }

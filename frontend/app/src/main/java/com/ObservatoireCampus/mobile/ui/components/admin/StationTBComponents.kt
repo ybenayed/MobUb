@@ -7,33 +7,42 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.Tram
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.ObservatoireCampus.mobile.model.admin.AdminStationTerDto
-import com.ObservatoireCampus.mobile.model.admin.AdminStationTerRequestDto
+import com.ObservatoireCampus.mobile.model.admin.AdminStationTBDto
+import com.ObservatoireCampus.mobile.model.admin.AdminStationTBRequestDto
 import com.ObservatoireCampus.mobile.network.RetrofitClient
 import com.ObservatoireCampus.mobile.repository.admin.AdminInfrastructureRepository
 import com.ObservatoireCampus.mobile.ui.screens.admin.InfraStrings
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
-import com.ObservatoireCampus.mobile.viewmodel.admin.AdminStationTerViewModel
-import com.ObservatoireCampus.mobile.viewmodel.admin.AdminStationTerViewModelFactory
+import com.ObservatoireCampus.mobile.viewmodel.admin.AdminStationTBViewModel
+import com.ObservatoireCampus.mobile.viewmodel.admin.AdminStationTBViewModelFactory
 
+/** Composant generique reutilise par AdminBusTab et AdminTramTab, seul le mode change. */
 @Composable
-fun AdminTerTab(
+fun AdminStationTBTab(
     strings: InfraStrings,
-    viewModel: AdminStationTerViewModel = viewModel(
-        factory = AdminStationTerViewModelFactory(AdminInfrastructureRepository(RetrofitClient.adminInfrastructureApi))
-    )
+    mode: String,          // "BUS" ou "TRAM"
+    icon: ImageVector
 ) {
+    val viewModel: AdminStationTBViewModel = viewModel(
+        key = "stationTB_$mode", // cle unique pour que Bus et Tram aient chacun leur instance
+        factory = AdminStationTBViewModelFactory(
+            AdminInfrastructureRepository(RetrofitClient.adminInfrastructureApi),
+            mode
+        )
+    )
+
     val stations by viewModel.stations.collectAsState()
     val searchQuery by viewModel.searchQuery.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -42,8 +51,8 @@ fun AdminTerTab(
     val deletingIds by viewModel.deletingIds.collectAsState()
 
     var showForm by remember { mutableStateOf(false) }
-    var stationBeingEdited by remember { mutableStateOf<AdminStationTerDto?>(null) }
-    var stationPendingDeletion by remember { mutableStateOf<AdminStationTerDto?>(null) }
+    var stationBeingEdited by remember { mutableStateOf<AdminStationTBDto?>(null) }
+    var stationPendingDeletion by remember { mutableStateOf<AdminStationTBDto?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -91,8 +100,9 @@ fun AdminTerTab(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         items(stations, key = { it.id }) { station ->
-                            StationTerCard(
+                            StationTBCard(
                                 station = station,
+                                icon = icon,
                                 isDeleting = station.id in deletingIds,
                                 onEditClick = {
                                     stationBeingEdited = station
@@ -121,11 +131,11 @@ fun AdminTerTab(
     }
 
     if (showForm) {
-        val nextId = remember(stations) { viewModel.nextAutoNavitiaId() }
-        StationTerFormSheet(
+        val nextId = remember(stations) { viewModel.nextAutoStopId() }
+        StationTBFormSheet(
             strings = strings,
             existing = stationBeingEdited,
-            nextAutoNavitiaId = nextId,
+            nextAutoStopId = nextId,
             isSaving = isSaving,
             onDismiss = { showForm = false },
             onSubmit = { request ->
@@ -139,7 +149,7 @@ fun AdminTerTab(
     stationPendingDeletion?.let { station ->
         AlertDialog(
             onDismissRequest = { stationPendingDeletion = null },
-            title = { Text("${strings.confirmDeleteTitle} ${station.nom ?: station.navitiaId} ?") },
+            title = { Text("${strings.confirmDeleteTitle} ${station.nom ?: station.stopId} ?") },
             text = { Text(strings.confirmDeleteMessage) },
             confirmButton = {
                 TextButton(onClick = {
@@ -159,8 +169,9 @@ fun AdminTerTab(
 }
 
 @Composable
-private fun StationTerCard(
-    station: AdminStationTerDto,
+private fun StationTBCard(
+    station: AdminStationTBDto,
+    icon: ImageVector,
     isDeleting: Boolean,
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
@@ -175,14 +186,14 @@ private fun StationTerCard(
             modifier = Modifier.fillMaxWidth().padding(14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(Icons.Default.Train, contentDescription = null, tint = ObcampusPrimary, modifier = Modifier.size(28.dp))
+            Icon(icon, contentDescription = null, tint = ObcampusPrimary, modifier = Modifier.size(28.dp))
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.weight(1f)) {
-                Text(station.nom ?: station.navitiaId, fontWeight = FontWeight.SemiBold)
-                station.distanceCentreMetres?.let {
+                Text(station.nom ?: station.stopId, fontWeight = FontWeight.SemiBold)
+                if (!station.lines.isNullOrEmpty()) {
                     Text(
-                        "${it.toInt()} m du centre",
+                        station.lines.joinToString(", "),
                         style = MaterialTheme.typography.bodySmall,
                         color = Color.Gray
                     )
@@ -207,18 +218,19 @@ private fun StationTerCard(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StationTerFormSheet(
+private fun StationTBFormSheet(
     strings: InfraStrings,
-    existing: AdminStationTerDto?,
-    nextAutoNavitiaId: String,
+    existing: AdminStationTBDto?,
+    nextAutoStopId: String,
     isSaving: Boolean,
     onDismiss: () -> Unit,
-    onSubmit: (AdminStationTerRequestDto) -> Unit
+    onSubmit: (AdminStationTBRequestDto) -> Unit
 ) {
-    val navitiaId = existing?.navitiaId ?: nextAutoNavitiaId
+    val stopId = existing?.stopId ?: nextAutoStopId
     var nom by remember { mutableStateOf(existing?.nom ?: "") }
     var latitude by remember { mutableStateOf(existing?.latitude?.toString() ?: "") }
     var longitude by remember { mutableStateOf(existing?.longitude?.toString() ?: "") }
+    var linesText by remember { mutableStateOf(existing?.lines?.joinToString(", ") ?: "") }
 
     val isEditMode = existing != null
     val canSubmit = nom.isNotBlank()
@@ -239,7 +251,7 @@ private fun StationTerFormSheet(
             )
 
             Text(
-                text = "${strings.fieldStationId} : $navitiaId",
+                text = "${strings.fieldStationId} : $stopId",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.Gray
             )
@@ -252,13 +264,23 @@ private fun StationTerFormSheet(
                 modifier = Modifier.fillMaxWidth()
             )
 
+            OutlinedTextField(
+                value = linesText,
+                onValueChange = { linesText = it },
+                label = { Text("Lignes (séparées par des virgules)") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth()
+            )
+
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = latitude,
                     onValueChange = { latitude = it },
                     label = { Text(strings.fieldLatitude) },
                     singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    ),
                     modifier = Modifier.weight(1f)
                 )
                 OutlinedTextField(
@@ -266,7 +288,9 @@ private fun StationTerFormSheet(
                     onValueChange = { longitude = it },
                     label = { Text(strings.fieldLongitude) },
                     singleLine = true,
-                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal
+                    ),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -283,11 +307,17 @@ private fun StationTerFormSheet(
                 Button(
                     onClick = {
                         onSubmit(
-                            AdminStationTerRequestDto(
-                                navitiaId = navitiaId,
+                            AdminStationTBRequestDto(
+                                stopId = stopId,
                                 nom = nom.ifBlank { null },
+                                stopAreaRef = existing?.stopAreaRef,
+                                mode = null, // fixe par le ViewModel (mode de l'onglet)
                                 latitude = latitude.toDoubleOrNull(),
-                                longitude = longitude.toDoubleOrNull()
+                                longitude = longitude.toDoubleOrNull(),
+                                lines = linesText.split(",")
+                                    .map { it.trim() }
+                                    .filter { it.isNotEmpty() }
+                                    .ifEmpty { null }
                             )
                         )
                     },

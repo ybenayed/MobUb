@@ -83,7 +83,7 @@ fun DrawerMenu(
     var translatedBackLabel by remember { mutableStateOf("Retour") }
 
     // AJOUT : libelles admin
-    var translatedUserManagementLabel by remember { mutableStateOf("Gestion des utilisateurs") }
+    var translatedUserManagementLabel by remember { mutableStateOf(" Utilisateurs") }
     var translatedInfrastructureLabel by remember { mutableStateOf("Infrastructures") }
     var translatedLegendsLabel by remember { mutableStateOf("Légendes") }
 
@@ -94,7 +94,7 @@ fun DrawerMenu(
         translatedAccountLabel = languageViewModel.translate("Mon compte")
         translatedLogoutLabel = languageViewModel.translate("Déconnexion")
         translatedBackLabel = languageViewModel.translate("Retour")
-        translatedUserManagementLabel = languageViewModel.translate("Gestion des utilisateurs")
+        translatedUserManagementLabel = languageViewModel.translate(" Utilisateurs")
         translatedInfrastructureLabel = languageViewModel.translate("Infrastructures")
         translatedLegendsLabel = languageViewModel.translate("Légendes")
     }
