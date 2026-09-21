@@ -27,7 +27,9 @@ fun StationTBBubble(
     onClose: () -> Unit,
     languageViewModel: LanguageViewModel,
     currentLanguage: AppLanguage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null,
+    onRetry: () -> Unit = {}
 ) {
     // États pour les textes traduits
     var textFermer by remember { mutableStateOf("Fermer") }
@@ -36,6 +38,8 @@ fun StationTBBubble(
     var textRetard by remember { mutableStateOf("Retard") }
     var textTram by remember { mutableStateOf("Tram") }
     var textBus by remember { mutableStateOf("Bus") }
+    var textReessayer by remember { mutableStateOf("Reessayer") }
+    var textErreur by remember { mutableStateOf("") }
 
     LaunchedEffect(currentLanguage) {
         textFermer = languageViewModel.translate("Fermer")
@@ -44,6 +48,11 @@ fun StationTBBubble(
         textRetard = languageViewModel.translate("Retard")
         textTram = languageViewModel.translate("Tram")
         textBus = languageViewModel.translate("Bus")
+        textReessayer = languageViewModel.translate("Reessayer")
+    }
+
+    LaunchedEffect(errorMessage, currentLanguage) {
+        textErreur = errorMessage?.let { languageViewModel.translate(it) } ?: ""
     }
 
     Card(
@@ -98,6 +107,22 @@ fun StationTBBubble(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
+                    }
+                }
+                errorMessage != null -> {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = textErreur.ifBlank { errorMessage },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                        TextButton(onClick = onRetry) {
+                            Text(textReessayer)
+                        }
                     }
                 }
                 passages.isEmpty() -> {

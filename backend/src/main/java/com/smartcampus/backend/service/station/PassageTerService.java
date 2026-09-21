@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -24,16 +25,19 @@ import java.util.concurrent.locks.ReentrantLock;
  * Partie DYNAMIQUE : prochains passages en gare (temps reel Navitia/SNCF).
  * JAMAIS persiste en base (donnee volatile par nature).
  *
- * ATTENTION QUOTA : le token SNCF free-tier est limite a 5000 requetes/mois
- * (~166/jour). Un cache par gare avec TTL est donc INDISPENSABLE, pas juste
- * une optimisation. Sans cache, quelques dizaines d'utilisateurs simultanes
- * epuisent le quota en quelques heures.
+ * ATTENTION QUOTA : le token SNCF est limite en nombre de requetes.
+ * Un cache par gare avec TTL est donc INDISPENSABLE, pas juste
+ * une optimisation.
+ *
+ * NOTE TEMPS REEL : sans le parametre data_freshness=realtime, Navitia ne
+ * renvoie que l'horaire theorique. Meme avec ce parametre, seuls les trains
+ * pour lesquels la SNCF envoie une mise a jour sont marques "realtime" ;
+ * les autres restent en "base_schedule" (horaire theorique).
  */
 @Slf4j
 @Service
 public class PassageTerService {
 
-    @Qualifier("navitiaRestTemplate")
     private final RestTemplate restTemplate;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -49,7 +53,9 @@ public class PassageTerService {
     private static final DateTimeFormatter NAVITIA_DATETIME = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    private static final String DEPARTURES_TEMPLATE = "{baseUrl}/stop_areas/{stopId}/departures?count=10";
+    // data_freshness=realtime : demande a Navitia d'inclure les mises a jour temps reel (retards, suppressions)
+    private static final String DEPARTURES_TEMPLATE =
+            "{baseUrl}/stop_areas/{stopId}/departures?count=10&data_freshness=realtime";
 
     private final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, ReentrantLock> locks = new ConcurrentHashMap<>();
@@ -132,18 +138,25 @@ public class PassageTerService {
                         .tempsReel(tempsReel)
                         .build());
             }
+        } catch (HttpStatusCodeException e) {
+            log.error("Navitia a repondu {} pour {} : {}",
+                    e.getStatusCode(), navitiaStopId, e.getResponseBodyAsString());
+            throw new RuntimeException("Navitia HTTP " + e.getStatusCode() + " pour " + navitiaStopId, e);
         } catch (Exception e) {
             log.error("Erreur recuperation passages pour {}", navitiaStopId, e);
             throw new RuntimeException("Erreur recuperation passages pour " + navitiaStopId, e);
         }
 
-        log.info("Passages rafraichis pour {} : {} resultats", navitiaStopId, passages.size());
+        long nbTempsReel = passages.stream().filter(PassageTerDTO::isTempsReel).count();
+        log.info("Passages rafraichis pour {} : {} resultats ({} en temps reel)",
+                navitiaStopId, passages.size(), nbTempsReel);
         return passages;
     }
 
     /**
-     * Convertit une chaîne de date Navitia (ex: "20260908T163000")
-     * vers le format lisible "HH:mm" (ex: "16:30") ajusté sur le fuseau de Bordeaux.
+     * Convertit une chaine de date Navitia (ex: "20260908T163000")
+     * vers le format lisible "HH:mm" (ex: "16:30"). Navitia renvoie deja
+     * l'heure locale, on ne fait donc aucune conversion de fuseau.
      */
     private String formatToBordeauxTime(String navitiaDateTimeStr) {
         if (navitiaDateTimeStr == null || navitiaDateTimeStr.isBlank()) {

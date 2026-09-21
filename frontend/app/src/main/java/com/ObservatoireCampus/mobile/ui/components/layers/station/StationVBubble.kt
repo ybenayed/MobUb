@@ -27,7 +27,9 @@ fun StationVBubble(
     onClose: () -> Unit,
     languageViewModel: LanguageViewModel,
     currentLanguage: AppLanguage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null,
+    onRetry: () -> Unit = {}
 ) {
     // États pour les textes traduits
     var textHeaderLabel by remember { mutableStateOf("STATION VÉLO") }
@@ -42,6 +44,8 @@ fun StationVBubble(
     var textMisAJour by remember { mutableStateOf("Mis à jour") }
     var textFermer by remember { mutableStateOf("Fermer") }
     var textIndisponible by remember { mutableStateOf("Informations indisponibles") }
+    var textReessayer by remember { mutableStateOf("Reessayer") }
+    var textErreur by remember { mutableStateOf("") }
 
     // États de calcul de temps relatifs (Traductions dynamiques)
     var textIlYa by remember { mutableStateOf("il y a") }
@@ -63,11 +67,16 @@ fun StationVBubble(
         textMisAJour = languageViewModel.translate("Mis à jour")
         textFermer = languageViewModel.translate("Fermer")
         textIndisponible = languageViewModel.translate("Informations indisponibles")
+        textReessayer = languageViewModel.translate("Reessayer")
 
         textIlYa = languageViewModel.translate("il y a")
         textMin = languageViewModel.translate("min")
         textHeureAbbrev = languageViewModel.translate("h")
         textSecondesAbbrev = languageViewModel.translate("s")
+    }
+
+    LaunchedEffect(errorMessage, currentLanguage) {
+        textErreur = errorMessage?.let { languageViewModel.translate(it) } ?: ""
     }
 
     Card(
@@ -122,6 +131,22 @@ fun StationVBubble(
                         contentAlignment = Alignment.Center
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
+                    }
+                }
+                errorMessage != null -> {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = textErreur.ifBlank { errorMessage },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                        TextButton(onClick = onRetry) {
+                            Text(textReessayer)
+                        }
                     }
                 }
                 detail == null -> {

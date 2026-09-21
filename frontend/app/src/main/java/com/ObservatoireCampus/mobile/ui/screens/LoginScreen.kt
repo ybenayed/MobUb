@@ -45,7 +45,6 @@ import com.ObservatoireCampus.mobile.ui.theme.WaypusTextMuted
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
 private data class LoginStrings(
-    val tagline: String = "Mobilite intelligente du campus de Bordeaux",
     val busTram: String = "Bus / tram",
     val velos: String = "Velos",
     val parkings: String = "Parkings",
@@ -63,7 +62,6 @@ private data class LoginStrings(
 private suspend fun LanguageViewModel.translateLoginStrings(): LoginStrings {
     val base = LoginStrings()
     return LoginStrings(
-        tagline = translate(base.tagline),
         busTram = translate(base.busTram),
         velos = translate(base.velos),
         parkings = translate(base.parkings),
@@ -108,7 +106,7 @@ fun LoginScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // Fond Carte OSM
+        // Fond carte OSM
         AndroidView(
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
@@ -147,7 +145,7 @@ fun LoginScreen(
                 .background(Color.Black.copy(alpha = 0.10f))
         )
 
-        // Sélecteur de langue
+        // Selecteur de langue
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
@@ -158,14 +156,16 @@ fun LoginScreen(
             LanguageSelector(languageViewModel = languageViewModel)
         }
 
-        // Formulaire (scrollable) — on laisse de la place en bas (padding) pour
-        // que le contenu ne soit jamais caché par la barre de logos fixe.
+        // Formulaire (scrollable), centre verticalement dans l'ecran.
+        // Les espaces en haut (64 dp) et en bas (90 dp) evitent le selecteur
+        // de langue et la barre de logos fixe.
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
                 .imePadding()
-                .padding(horizontal = 20.dp)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.Center
         ) {
             Spacer(modifier = Modifier.height(64.dp))
 
@@ -178,22 +178,10 @@ fun LoginScreen(
             ) {
                 MobUbLogo(
                     modifier = Modifier.align(Alignment.CenterHorizontally),
-                    showTagline = true,
-                    tagline = strings.tagline
+                    showTagline = false
                 )
 
                 Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    MobilityBadge(icon = Icons.Default.DirectionsBus, label = strings.busTram)
-                    MobilityBadge(icon = Icons.Default.DirectionsBike, label = strings.velos)
-                    MobilityBadge(icon = Icons.Default.LocalParking, label = strings.parkings)
-                }
-
-                Spacer(modifier = Modifier.height(28.dp))
 
                 OutlinedTextField(
                     value = username,
@@ -242,7 +230,7 @@ fun LoginScreen(
                 )
 
                 Text(
-                    text = "Mot de passe oublié ?",
+                    text = "Mot de passe oublie ?",
                     color = ObcampusPrimary,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.Medium,
@@ -309,21 +297,19 @@ fun LoginScreen(
             Spacer(modifier = Modifier.height(90.dp))
         }
 
-        // Barre de logos "Chaire Mobilite" / "Bordeaux INP" : desormais FIXE,
+        // Barre de logos "Chaire Mobilite" / "Bordeaux INP" : FIXE,
         // ancree tout en bas de l'ecran, quel que soit le scroll du formulaire
         // ou l'ouverture du clavier.
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                //.background(Color.White.copy(alpha = 0.85f))
                 .padding(vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             HorizontalDivider(color = Color.Gray.copy(alpha = 0.3f))
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            Spacer(modifier = Modifier.height(6.dp))
             Row(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically

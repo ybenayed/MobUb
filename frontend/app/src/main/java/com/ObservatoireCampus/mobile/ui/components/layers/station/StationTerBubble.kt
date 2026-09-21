@@ -27,21 +27,29 @@ fun StationTerBubble(
     onClose: () -> Unit,
     languageViewModel: LanguageViewModel,
     currentLanguage: AppLanguage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null,
+    onRetry: () -> Unit = {}
 ) {
-    // États traduits
     var textFermer by remember { mutableStateOf("Fermer") }
-    var textAucunPassage by remember { mutableStateOf("Aucun passage prévu") }
+    var textAucunPassage by remember { mutableStateOf("Aucun passage prevu") }
     var textInconnu by remember { mutableStateOf("Direction inconnue") }
     var textRetard by remember { mutableStateOf("Retard") }
     var textTrain by remember { mutableStateOf("Train") }
+    var textReessayer by remember { mutableStateOf("Reessayer") }
+    var textErreur by remember { mutableStateOf("") }
 
     LaunchedEffect(currentLanguage) {
         textFermer = languageViewModel.translate("Fermer")
-        textAucunPassage = languageViewModel.translate("Aucun passage prévu")
+        textAucunPassage = languageViewModel.translate("Aucun passage prevu")
         textInconnu = languageViewModel.translate("Direction inconnue")
         textRetard = languageViewModel.translate("Retard")
         textTrain = languageViewModel.translate("Train")
+        textReessayer = languageViewModel.translate("Reessayer")
+    }
+
+    LaunchedEffect(errorMessage, currentLanguage) {
+        textErreur = errorMessage?.let { languageViewModel.translate(it) } ?: ""
     }
 
     Card(
@@ -98,6 +106,22 @@ fun StationTerBubble(
                         CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
                     }
                 }
+                errorMessage != null -> {
+                    Column(
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = textErreur.ifBlank { errorMessage },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            textAlign = TextAlign.Center
+                        )
+                        TextButton(onClick = onRetry) {
+                            Text(textReessayer)
+                        }
+                    }
+                }
                 passages.isEmpty() -> {
                     Text(
                         text = textAucunPassage,
@@ -131,7 +155,14 @@ private fun PassageTerRow(
     labelInconnu: String,
     labelRetard: String
 ) {
-    val hTheorique = formatHeure(passage.heureTheorique)
+    // Temps reel : on affiche l'heure prevue ; sinon l'heure theorique.
+    val heureBrute = if (passage.tempsReel) {
+        passage.heurePrevue ?: passage.heureTheorique
+    } else {
+        passage.heureTheorique ?: passage.heurePrevue
+    }
+    val heureAffichee = formatHeure(heureBrute)
+
     val retardSecondes = passage.retardSecondes ?: 0L
     val estEnRetard = retardSecondes > 45L
 
@@ -177,7 +208,7 @@ private fun PassageTerRow(
 
         Column(horizontalAlignment = Alignment.End) {
             Text(
-                text = hTheorique,
+                text = heureAffichee,
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
                 color = if (estEnRetard) Color(0xFFD32F2F) else MaterialTheme.colorScheme.onSurface
@@ -198,14 +229,21 @@ private fun PassageTerRow(
 
 private fun formatHeure(raw: String?): String {
     if (raw.isNullOrBlank()) return "--:--"
-    val timePart = raw.substringAfter("T", "")
-    return if (timePart.length >= 4) {
-        val heures = timePart.substring(0, 2)
-        val minutes = timePart.substring(2, 4)
-        "$heures:$minutes"
-    } else {
-        "--:--"
+
+    // Format deja pret (renvoye par le backend TER) : "11:53"
+    Regex("""^(\d{1,2}):(\d{2})$""").matchEntire(raw.trim())?.let {
+        return "${it.groupValues[1].padStart(2, '0')}:${it.groupValues[2]}"
     }
+
+    // Formats avec un "T" : "20260921T115300" ou "2026-09-21T11:53:00"
+    val timePart = raw.substringAfter('T', raw).trim()
+    Regex("""^(\d{2}):(\d{2})""").find(timePart)?.let {
+        return "${it.groupValues[1]}:${it.groupValues[2]}"
+    }
+    Regex("""^(\d{2})(\d{2})(\d{2})?$""").find(timePart)?.let {
+        return "${it.groupValues[1]}:${it.groupValues[2]}"
+    }
+    return "--:--"
 }
 
 private fun cleanDirection(raw: String?, fallback: String): String {

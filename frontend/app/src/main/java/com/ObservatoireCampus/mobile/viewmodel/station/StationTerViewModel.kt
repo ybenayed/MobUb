@@ -5,7 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.ObservatoireCampus.mobile.model.layers.LayerItemUiState
 import com.ObservatoireCampus.mobile.model.station.PassageTerDto
 import com.ObservatoireCampus.mobile.model.station.StationTerPositionDto
+import com.ObservatoireCampus.mobile.network.ErrorContext
+import com.ObservatoireCampus.mobile.network.toUserMessage
 import com.ObservatoireCampus.mobile.repository.station.StationTerRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -15,6 +19,7 @@ class StationTerViewModel(
 ) : ViewModel() {
 
     private var allPositions: List<StationTerPositionDto> = emptyList()
+    private var passagesJob: Job? = null
 
     private val _layers = MutableStateFlow<List<LayerItemUiState>>(emptyList())
     val layers: StateFlow<List<LayerItemUiState>> = _layers
@@ -32,8 +37,13 @@ class StationTerViewModel(
     private val _bubbleLoading = MutableStateFlow(false)
     val bubbleLoading: StateFlow<Boolean> = _bubbleLoading
 
+    // Erreur du chargement des gares (bandeau en haut de la carte)
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
+
+    // Erreur du temps reel (affichee DANS la bulle, pas dans le bandeau)
+    private val _passagesError = MutableStateFlow<String?>(null)
+    val passagesError: StateFlow<String?> = _passagesError
 
     val masterActive: Boolean
         get() = _layers.value.isNotEmpty() && _layers.value.all { it.visible }
@@ -52,8 +62,10 @@ class StationTerViewModel(
                     )
                 )
                 _error.value = null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = e.toUserMessage()
             }
         }
     }
@@ -79,21 +91,37 @@ class StationTerViewModel(
     // Appele depuis la carte quand l'utilisateur tape sur un marqueur
     fun onStationClicked(station: StationTerPositionDto) {
         _selectedStation.value = station
+        loadPassages(station)
+    }
+
+    // Bouton "Reessayer" de la bulle
+    fun retryPassages() {
+        _selectedStation.value?.let { loadPassages(it) }
+    }
+
+    private fun loadPassages(station: StationTerPositionDto) {
+        passagesJob?.cancel()
         _passages.value = emptyList()
+        _passagesError.value = null
         _bubbleLoading.value = true
-        viewModelScope.launch {
+        passagesJob = viewModelScope.launch {
             try {
                 _passages.value = repository.getPassages(station.navitiaId)
+                _bubbleLoading.value = false
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
+                _passagesError.value = e.toUserMessage(ErrorContext.REALTIME)
                 _bubbleLoading.value = false
             }
         }
     }
 
     fun closeBubble() {
+        passagesJob?.cancel()
         _selectedStation.value = null
         _passages.value = emptyList()
+        _passagesError.value = null
+        _bubbleLoading.value = false
     }
 }

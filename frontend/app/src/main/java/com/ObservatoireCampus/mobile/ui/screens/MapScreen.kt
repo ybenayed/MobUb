@@ -144,6 +144,7 @@ fun MapScreen(
     val passagesTB by stationTBViewModel.passages.collectAsState()
     val bubbleLoadingTB by stationTBViewModel.bubbleLoading.collectAsState()
     val stationTBError by stationTBViewModel.error.collectAsState()
+    val stationTBPassagesError by stationTBViewModel.passagesError.collectAsState()
     var stationTBExpanded by remember { mutableStateOf(false) }
 
     // Velo
@@ -167,6 +168,7 @@ fun MapScreen(
     val passagesTer by stationTerViewModel.passages.collectAsState()
     val bubbleLoadingTer by stationTerViewModel.bubbleLoading.collectAsState()
     val stationTerError by stationTerViewModel.error.collectAsState()
+    val stationTerPassagesError by stationTerViewModel.passagesError.collectAsState()
     var stationTerExpanded by remember { mutableStateOf(false) }
 
     // Free vehicle
@@ -179,6 +181,8 @@ fun MapScreen(
     val selectedFreeVehicleId by freeVehicleViewModel.selectedVehicleId.collectAsState()
     val selectedFreeVehicle by freeVehicleViewModel.selectedVehicle.collectAsState()
     val bubbleLoadingFV by freeVehicleViewModel.bubbleLoading.collectAsState()
+    val selectedStationV by stationVViewModel.selectedStation.collectAsState()
+    val stationVDetailError by stationVViewModel.detailError.collectAsState()
     var freeVehicleExpanded by remember { mutableStateOf(false) }
 
     // Localisation utilisateur
@@ -289,6 +293,7 @@ fun MapScreen(
             campusError, parkingError, stationTBError, stationVError,
             stationTerError, freeVehicleError, languageError
         )
+            .distinct()
             .takeIf { it.isNotEmpty() }
             ?.joinToString(" | ")
 
@@ -780,6 +785,8 @@ fun MapScreen(
                         loading = bubbleLoadingTB,
                         onClose = { stationTBViewModel.closeBubble() },
                         languageViewModel = languageViewModel,
+                        errorMessage = stationTBPassagesError,
+                        onRetry = { stationTBViewModel.retryPassages() },
                         currentLanguage = currentLanguage,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
@@ -792,9 +799,11 @@ fun MapScreen(
 
                 key(currentLanguage) {
                     StationVBubble(
-                        position = positionCorrespondante,
+                        position = selectedStationV!!,
                         detail = selectedStationVDetail,
                         loading = bubbleLoadingV,
+                        errorMessage = stationVDetailError,
+                        onRetry = { stationVViewModel.retryDetail() },
                         onClose = { stationVViewModel.closeBubble() },
                         languageViewModel = languageViewModel,
                         currentLanguage = currentLanguage,
@@ -811,6 +820,8 @@ fun MapScreen(
                         loading = bubbleLoadingTer,
                         onClose = { stationTerViewModel.closeBubble() },
                         languageViewModel = languageViewModel,
+                        errorMessage = stationTerPassagesError,
+                        onRetry = { stationTerViewModel.retryPassages() },
                         currentLanguage = currentLanguage,
                         modifier = Modifier
                             .align(Alignment.BottomCenter)

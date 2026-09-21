@@ -20,3 +20,45 @@ services:
       - "8081:8080"
     command: ["--load", "--serve"]
     restart: unless-stopped
+
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: observatoire_db
+    environment:
+      POSTGRES_DB: smartcampus
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d smartcampus"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    container_name: observatoire_backend
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/smartcampus
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      OTP_BASE_URL: http://otp:8080
+      NAVITIA_TOKEN: ${NAVITIA_TOKEN}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+      APP_JWT_SECRET: ${JWT_SECRET}
+      APP_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+      otp:
+        condition: service_started
+    restart: unless-stopped
+
+volumes:
+  pgdata:
