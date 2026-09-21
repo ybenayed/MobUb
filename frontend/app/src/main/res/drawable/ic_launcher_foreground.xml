@@ -1,10 +1,4 @@
-<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp"
-    android:height="108dp"
-    android:viewportWidth="108"
-    android:viewportHeight="108">
-    <path
-        android:fillColor="#FFFFFF"
-        android:fillType="evenOdd"
-        android:pathData="M54,27.2 C46.8,27.2 40.8,33.2 40.8,40.4 C40.8,50 54,62 54,62 C54,62 67.2,50 67.2,40.4 C67.2,33.2 61.2,27.2 54,27.2 Z M60,40.4 A6,6 0 1,0 48,40.4 A6,6 0 1,0 60,40.4 Z" />
-</vector>
+<?xml version="1.0" encoding="utf-8"?>
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/logo_mobub"
+    android:inset="20%" />
