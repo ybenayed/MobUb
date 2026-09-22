@@ -17,5 +17,4 @@ target/
 otp-service/otp-data/*.osm.pbf
 otp-service/otp-data/*.osm.pbf.bak
 otp-service/otp-data/*.zip
-otp-service/otp-data/graph.obj
-otp-service/otp-data/graph.obj.*
+
