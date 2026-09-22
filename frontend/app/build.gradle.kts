@@ -17,13 +17,11 @@ android {
 
     buildTypes {
         debug {
-            // Vos essais : le backend sur votre PC (reseau local)
-            buildConfigField("String", "BASE_URL", "\"http://10.178.47.195:8080/\"")
+            buildConfigField("String", "BASE_URL", "\"https://mobub-backend.onrender.com/\"")
         }
         release {
             isMinifyEnabled = false
-            // Version publiee : l'adresse HTTPS de votre serveur (a remplacer, voir etape 3)
-            buildConfigField("String", "BASE_URL", "\"https://api.votredomaine.fr/\"")
+            buildConfigField("String", "BASE_URL", "\"https://mobub-backend.onrender.com/\"")
         }
     }
 
