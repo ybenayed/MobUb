@@ -20,6 +20,6 @@ EXPOSE 8080
 
 # Sur le plan Free de Render (512 Mo RAM), reste prudent sur le heap :
 # laisse de la marge pour l'OS + overhead JVM.
-ENV JAVA_OPTIONS="-Xmx400m"
+ENV JAVA_OPTIONS="-Xmx500m"
 
 CMD ["--load", "--serve"]
