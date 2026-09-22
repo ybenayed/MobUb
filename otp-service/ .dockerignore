@@ -1,0 +1,14 @@
+# otp-service/.dockerignore
+
+# Dossiers de test / restes du quickstart officiel OTP, pas utiles ici
+berlin/
+otp/
+
+# Fichiers bruts utilisés uniquement pour CONSTRUIRE le graphe,
+# pas pour le SERVIR : on ne les embarque pas dans l'image déployée
+otp-data/aquitaine.osm.pbf
+otp-data/gtfs-tbm.zip
+otp-data/gtfs-ter.zip
+
+.git
+.gitignore
