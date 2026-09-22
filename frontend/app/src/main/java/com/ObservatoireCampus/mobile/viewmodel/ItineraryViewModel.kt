@@ -3,6 +3,7 @@ package com.ObservatoireCampus.mobile.viewmodel.itinerary
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ObservatoireCampus.mobile.model.search.CURRENT_LOCATION_MARKER
 import com.ObservatoireCampus.mobile.model.search.ItineraryFilters
 import com.ObservatoireCampus.mobile.model.search.ItineraryOptionDto
 import com.ObservatoireCampus.mobile.model.search.ItinerarySortOption
@@ -10,9 +11,12 @@ import com.ObservatoireCampus.mobile.model.search.SearchResultDto
 import com.ObservatoireCampus.mobile.model.search.TransportModeUi
 import com.ObservatoireCampus.mobile.model.search.deduplicatedByModeSequence
 import com.ObservatoireCampus.mobile.model.search.sortedByOption
+import com.ObservatoireCampus.mobile.network.ErrorContext
+import com.ObservatoireCampus.mobile.network.toUserMessage
 import com.ObservatoireCampus.mobile.repository.ItineraryRepository
 import com.ObservatoireCampus.mobile.repository.SearchHistoryRepository
 import com.ObservatoireCampus.mobile.repository.SearchRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,7 +26,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import com.ObservatoireCampus.mobile.model.search.CURRENT_LOCATION_MARKER
 
 private const val TAG = "ItineraryViewModel"
 
@@ -79,13 +82,13 @@ class ItineraryViewModel : ViewModel() {
     private val _isSearching = MutableStateFlow(false)
     val isSearching: StateFlow<Boolean> = _isSearching.asStateFlow()
 
+    // Message affiche sous le formulaire : "Aucun itineraire trouve" OU une erreur reseau/serveur
     private val _searchError = MutableStateFlow<String?>(null)
     val searchError: StateFlow<String?> = _searchError.asStateFlow()
 
     // ---------- POPUP DE DETAILS ----------
     private val _detailsItinerary = MutableStateFlow<ItineraryOptionDto?>(null)
     val detailsItinerary: StateFlow<ItineraryOptionDto?> = _detailsItinerary.asStateFlow()
-
 
     private val searchHistoryRepository = SearchHistoryRepository()
 
@@ -122,7 +125,7 @@ class ItineraryViewModel : ViewModel() {
                 _savedHistorySignatures.value = _savedHistorySignatures.value + signature
                 _saveHistoryMessage.value = "Itinéraire enregistré dans l'historique"
             }.onFailure {
-                _saveHistoryMessage.value = "Échec de l'enregistrement de l'itinéraire"
+                _saveHistoryMessage.value = "Échec de l'enregistrement : ${it.toUserMessage()}"
             }
             _savingHistorySignatures.value = _savingHistorySignatures.value - signature
         }
@@ -136,6 +139,7 @@ class ItineraryViewModel : ViewModel() {
     fun onOriginQueryChanged(newQuery: String) {
         _originQuery.value = newQuery
         _originPoint.value = null
+        _searchError.value = null
         originJob?.cancel()
 
         if (newQuery.isBlank() || newQuery.length < 3) {
@@ -149,7 +153,10 @@ class ItineraryViewModel : ViewModel() {
             delay(500)
             _originSuggestions.value = try {
                 repository.searchPlaces(newQuery)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                _searchError.value = e.toUserMessage()
                 emptyList()
             }
             _originLoading.value = false
@@ -158,6 +165,7 @@ class ItineraryViewModel : ViewModel() {
 
     fun selectOrigin(result: SearchResultDto) {
         originJob?.cancel()
+        _originLoading.value = false
         _originPoint.value = result
         _originQuery.value = result.name
         _originSuggestions.value = emptyList()
@@ -165,6 +173,7 @@ class ItineraryViewModel : ViewModel() {
 
     fun setOriginToMyLocation(latitude: Double, longitude: Double, displayLabel: String = "Ma position") {
         originJob?.cancel()
+        _originLoading.value = false
         _originPoint.value = SearchResultDto(
             name = CURRENT_LOCATION_MARKER,   // <-- toujours le meme marqueur, jamais traduit
             latitude = latitude,
@@ -179,6 +188,7 @@ class ItineraryViewModel : ViewModel() {
     fun onDestinationQueryChanged(newQuery: String) {
         _destinationQuery.value = newQuery
         _destinationPoint.value = null
+        _searchError.value = null
         destinationJob?.cancel()
 
         if (newQuery.isBlank() || newQuery.length < 3) {
@@ -192,7 +202,10 @@ class ItineraryViewModel : ViewModel() {
             delay(500)
             _destinationSuggestions.value = try {
                 repository.searchPlaces(newQuery)
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
+                _searchError.value = e.toUserMessage()
                 emptyList()
             }
             _destinationLoading.value = false
@@ -201,6 +214,7 @@ class ItineraryViewModel : ViewModel() {
 
     fun selectDestination(result: SearchResultDto) {
         destinationJob?.cancel()
+        _destinationLoading.value = false
         _destinationPoint.value = result
         _destinationQuery.value = result.name
         _destinationSuggestions.value = emptyList()
@@ -208,6 +222,7 @@ class ItineraryViewModel : ViewModel() {
 
     fun setDestinationToMyLocation(latitude: Double, longitude: Double, displayLabel: String = "Ma position") {
         destinationJob?.cancel()
+        _destinationLoading.value = false
         _destinationPoint.value = SearchResultDto(
             name = CURRENT_LOCATION_MARKER,
             latitude = latitude,
@@ -277,12 +292,16 @@ class ItineraryViewModel : ViewModel() {
                 _itineraryOptions.value = options.deduplicatedByModeSequence()
 
                 if (options.isEmpty()) {
+                    // Pas une panne : le serveur a repondu, mais aucun trajet n'existe.
                     _searchError.value = "Aucun itineraire trouve"
                 }
                 Log.d(TAG, "${options.size} itineraire(s) recu(s) du backend, ${_itineraryOptions.value.size} apres dedup")
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Echec du calcul d'itineraire", e)
-                _searchError.value = "Erreur reseau, reessayez"
+                // Message adapte au type d'erreur (pas de connexion, serveur en panne, delai depasse...)
+                _searchError.value = e.toUserMessage(ErrorContext.ITINERARY)
             } finally {
                 _isSearching.value = false
             }
@@ -306,6 +325,8 @@ class ItineraryViewModel : ViewModel() {
     fun reset() {
         originJob?.cancel()
         destinationJob?.cancel()
+        _originLoading.value = false
+        _destinationLoading.value = false
         _originQuery.value = ""
         _originSuggestions.value = emptyList()
         _originPoint.value = null

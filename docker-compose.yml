@@ -45,10 +45,11 @@ services:
     ports:
       - "8080:8080"
     environment:
+      TZ: Europe/Paris
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/smartcampus
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      OTP_BASE_URL: http://otp:8080
+      OTP_BASE_URL: http://otp:8080/otp/routers/default
       NAVITIA_TOKEN: ${NAVITIA_TOKEN}
       SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
       APP_JWT_SECRET: ${JWT_SECRET}

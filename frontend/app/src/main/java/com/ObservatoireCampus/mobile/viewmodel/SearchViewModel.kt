@@ -3,7 +3,9 @@ package com.ObservatoireCampus.mobile.viewmodel.search
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ObservatoireCampus.mobile.model.search.SearchResultDto
+import com.ObservatoireCampus.mobile.network.toUserMessage
 import com.ObservatoireCampus.mobile.repository.SearchRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,12 +31,17 @@ class SearchViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    // Erreur de la recherche de lieux (null = tout va bien)
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     private var searchJob: Job? = null
 
     fun onQueryChanged(newQuery: String) {
         _query.value = newQuery
+        _error.value = null
 
-        // Annuler la recherche précédente si l'utilisateur tape vite (debounce)
+        // Annuler la recherche precedente si l'utilisateur tape vite (debounce)
         searchJob?.cancel()
 
         if (newQuery.isBlank() || newQuery.length < 3) {
@@ -45,15 +52,18 @@ class SearchViewModel : ViewModel() {
 
         searchJob = viewModelScope.launch {
             _isLoading.value = true
-            delay(500) // Attendre 500ms sans saisie avant de lancer la requête
+            delay(500) // Attendre 500ms sans saisie avant de lancer la requete
 
-            _suggestions.value = try {
-                repository.searchPlaces(newQuery)
+            try {
+                _suggestions.value = repository.searchPlaces(newQuery)
+                _isLoading.value = false
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                emptyList()
+                _suggestions.value = emptyList()
+                _error.value = e.toUserMessage()
+                _isLoading.value = false
             }
-
-            _isLoading.value = false
         }
     }
 }

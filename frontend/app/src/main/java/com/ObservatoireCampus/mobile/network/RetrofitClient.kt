@@ -5,9 +5,10 @@ import com.ObservatoireCampus.mobile.data.TokenManager
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
-
+import java.util.concurrent.TimeUnit
+import com.ObservatoireCampus.mobile.BuildConfig
 object RetrofitClient {
-    private const val BASE_URL = "http://10.178.47.195:8080/"
+    private const val BASE_URL = BuildConfig.BASE_URL
 
     private lateinit var tokenManager: TokenManager
 
@@ -28,6 +29,9 @@ object RetrofitClient {
         }
         OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(tokenManager))
+            .connectTimeout(5, TimeUnit.SECONDS)   // serveur injoignable : erreur rapide
+            .readTimeout(30, TimeUnit.SECONDS)     // reponse lente (ex: calcul d'itineraire)
+            .writeTimeout(30, TimeUnit.SECONDS)
             .build()
     }
 

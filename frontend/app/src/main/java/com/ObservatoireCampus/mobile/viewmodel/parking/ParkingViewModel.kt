@@ -5,7 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.ObservatoireCampus.mobile.model.layers.LayerItemUiState
 import com.ObservatoireCampus.mobile.model.parking.ParkingPositionDto
 import com.ObservatoireCampus.mobile.model.parking.ParkingStatusDto
+import com.ObservatoireCampus.mobile.network.ErrorContext
+import com.ObservatoireCampus.mobile.network.toUserMessage
 import com.ObservatoireCampus.mobile.repository.ParkingRepository
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -15,6 +19,7 @@ class ParkingViewModel(
 ) : ViewModel() {
 
     private var allPositions: List<ParkingPositionDto> = emptyList()
+    private var statusJob: Job? = null
 
     private val _parkingLayers = MutableStateFlow<List<LayerItemUiState>>(emptyList())
     val parkingLayers: StateFlow<List<LayerItemUiState>> = _parkingLayers
@@ -22,6 +27,7 @@ class ParkingViewModel(
     private val _visiblePositions = MutableStateFlow<List<ParkingPositionDto>>(emptyList())
     val visiblePositions: StateFlow<List<ParkingPositionDto>> = _visiblePositions
 
+    // Erreur du chargement des parkings (bandeau en haut de la carte)
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
 
@@ -34,6 +40,10 @@ class ParkingViewModel(
 
     private val _bubbleLoading = MutableStateFlow(false)
     val bubbleLoading: StateFlow<Boolean> = _bubbleLoading
+
+    // Erreur de l'etat en direct du parking (affichee DANS la bulle)
+    private val _statusError = MutableStateFlow<String?>(null)
+    val statusError: StateFlow<String?> = _statusError
 
     val masterActive: Boolean
         get() = _parkingLayers.value.isNotEmpty() && _parkingLayers.value.all { it.visible }
@@ -48,8 +58,10 @@ class ParkingViewModel(
                     LayerItemUiState(key = count.taType, label = count.taType, count = count.count, visible = false)
                 }
                 _error.value = null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _error.value = e.message
+                _error.value = e.toUserMessage()
             }
         }
     }
@@ -75,22 +87,37 @@ class ParkingViewModel(
     /** Appele quand l'utilisateur tape sur un marqueur parking sur la carte. */
     fun onParkingClicked(id: Long) {
         _selectedParkingId.value = id
-        _selectedParkingStatus.value = null
-        _bubbleLoading.value = true
+        loadStatus(id)
+    }
 
-        viewModelScope.launch {
+    /** Bouton "Reessayer" de la bulle. */
+    fun retryStatus() {
+        _selectedParkingId.value?.let { loadStatus(it) }
+    }
+
+    private fun loadStatus(id: Long) {
+        statusJob?.cancel()
+        _selectedParkingStatus.value = null
+        _statusError.value = null
+        _bubbleLoading.value = true
+        statusJob = viewModelScope.launch {
             try {
                 _selectedParkingStatus.value = repository.getParkingStatus(id)
+                _bubbleLoading.value = false
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _error.value = e.message
-            } finally {
+                _statusError.value = e.toUserMessage(ErrorContext.REALTIME)
                 _bubbleLoading.value = false
             }
         }
     }
 
     fun closeBubble() {
+        statusJob?.cancel()
         _selectedParkingId.value = null
         _selectedParkingStatus.value = null
+        _statusError.value = null
+        _bubbleLoading.value = false
     }
 }

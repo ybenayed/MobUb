@@ -18,7 +18,7 @@ import com.ObservatoireCampus.mobile.ui.components.layers.freevehicle.FreeVehicl
 import com.ObservatoireCampus.mobile.model.freevehicle.FreeVehicleDetailDto
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 import com.ObservatoireCampus.mobile.viewmodel.AppLanguage
-
+import com.ObservatoireCampus.mobile.ui.components.BubbleErrorContent
 @Composable
 fun FreeVehicleBubble(
     detail: FreeVehicleDetailDto?,
@@ -26,7 +26,9 @@ fun FreeVehicleBubble(
     onClose: () -> Unit,
     languageViewModel: LanguageViewModel,
     currentLanguage: AppLanguage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null,
+    onRetry: () -> Unit = {}
 ) {
     // États traduits
     var textHeaderLabel by remember { mutableStateOf("VÉHICULE EN LIBRE-SERVICE") }
@@ -134,6 +136,14 @@ fun FreeVehicleBubble(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
                     }
+                }
+                errorMessage != null -> {
+                    BubbleErrorContent(
+                        message = errorMessage,
+                        onRetry = onRetry,
+                        languageViewModel = languageViewModel,
+                        currentLanguage = currentLanguage
+                    )
                 }
                 detail == null -> {
                     Text(

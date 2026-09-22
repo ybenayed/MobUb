@@ -20,6 +20,7 @@ import com.ObservatoireCampus.mobile.model.parking.ParkingStatusDto
 import com.ObservatoireCampus.mobile.ui.components.layers.parking.ParkingTypeStyle
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 import com.ObservatoireCampus.mobile.viewmodel.AppLanguage
+import com.ObservatoireCampus.mobile.ui.components.BubbleErrorContent
 
 @Composable
 fun ParkingBubble(
@@ -28,7 +29,9 @@ fun ParkingBubble(
     onClose: () -> Unit,
     languageViewModel: LanguageViewModel,
     currentLanguage: AppLanguage,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    errorMessage: String? = null,
+    onRetry: () -> Unit = {}
 ) {
     // 1. Déclaration de tous les états pour stocker les textes traduits
     var textEtatLabel by remember { mutableStateOf("État") }
@@ -156,6 +159,14 @@ fun ParkingBubble(
                     ) {
                         CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
                     }
+                }
+                errorMessage != null -> {
+                    BubbleErrorContent(
+                        message = errorMessage,
+                        onRetry = onRetry,
+                        languageViewModel = languageViewModel,
+                        currentLanguage = currentLanguage
+                    )
                 }
                 status == null -> {
                     Text(

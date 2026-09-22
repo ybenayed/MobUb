@@ -8,13 +8,22 @@ android {
     compileSdk = 37
 
     defaultConfig {
+        applicationId = "com.ObservatoireCampus.mobile"
         minSdk = 26
         targetSdk = 37
+        versionCode = 1
+        versionName = "1.0"
     }
 
     buildTypes {
+        debug {
+            // Vos essais : le backend sur votre PC (reseau local)
+            buildConfigField("String", "BASE_URL", "\"http://10.178.47.195:8080/\"")
+        }
         release {
             isMinifyEnabled = false
+            // Version publiee : l'adresse HTTPS de votre serveur (a remplacer, voir etape 3)
+            buildConfigField("String", "BASE_URL", "\"https://api.votredomaine.fr/\"")
         }
     }
 
@@ -25,6 +34,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -53,7 +63,7 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")
     implementation("com.google.mlkit:translate:17.0.3")
-    // Pour détecter la langue automatiquement (optionnel)
+    // Pour detecter la langue automatiquement (optionnel)
     implementation("com.google.mlkit:language-id:17.0.6")
     implementation("androidx.compose.material:material-icons-extended:1.7.5")
 

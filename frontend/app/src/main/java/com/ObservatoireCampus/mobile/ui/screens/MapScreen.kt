@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ModalNavigationDrawer
+import kotlinx.coroutines.delay
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.*
 import com.ObservatoireCampus.mobile.network.RetrofitClient
@@ -132,6 +133,7 @@ fun MapScreen(
     val selectedParkingId by parkingViewModel.selectedParkingId.collectAsState()
     val selectedParkingStatus by parkingViewModel.selectedParkingStatus.collectAsState()
     val bubbleLoadingParking by parkingViewModel.bubbleLoading.collectAsState()
+    val parkingStatusError by parkingViewModel.statusError.collectAsState()
     var parkingExpanded by remember { mutableStateOf(false) }
 
     // Bus / Tram
@@ -183,6 +185,7 @@ fun MapScreen(
     val bubbleLoadingFV by freeVehicleViewModel.bubbleLoading.collectAsState()
     val selectedStationV by stationVViewModel.selectedStation.collectAsState()
     val stationVDetailError by stationVViewModel.detailError.collectAsState()
+    val freeVehicleDetailError by freeVehicleViewModel.detailError.collectAsState()
     var freeVehicleExpanded by remember { mutableStateOf(false) }
 
     // Localisation utilisateur
@@ -296,6 +299,33 @@ fun MapScreen(
             .distinct()
             .takeIf { it.isNotEmpty() }
             ?.joinToString(" | ")
+    // Relance uniquement les chargements qui ont echoue (les autres ne sont pas touches)
+    val retryFailedLoads: () -> Unit = {
+        if (viewModel.error.value != null) {
+            viewModel.loadCampus()
+            viewModel.loadLegend()
+        }
+        if (parkingViewModel.error.value != null) parkingViewModel.loadParking()
+        if (stationTBViewModel.error.value != null) stationTBViewModel.loadStations()
+        if (stationVViewModel.error.value != null) stationVViewModel.loadStations()
+        if (stationTerViewModel.error.value != null) stationTerViewModel.loadStations()
+        if (freeVehicleViewModel.error.value != null) freeVehicleViewModel.loadStations()
+    }
+
+    // Nouvel essai automatique toutes les 10 s tant qu'il y a une erreur.
+    // Des que tout est charge, l'erreur disparait et la boucle s'arrete toute seule.
+    val hasLoadError = combinedError != null
+    LaunchedEffect(hasLoadError) {
+        if (hasLoadError) {
+            while (true) {
+                delay(10_000)
+                retryFailedLoads()
+            }
+        }
+    }
+    LaunchedEffect(combinedError) {
+        android.util.Log.d("ERR_BANNER", "combinedError = $combinedError")
+    }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
@@ -759,6 +789,7 @@ fun MapScreen(
             ErrorBanner(
                 error = combinedError,
                 languageViewModel = languageViewModel,
+                onRetry = retryFailedLoads,
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .padding(top = 116.dp, start = 16.dp, end = 16.dp)
@@ -772,6 +803,8 @@ fun MapScreen(
                         onClose = { parkingViewModel.closeBubble() },
                         languageViewModel = languageViewModel,
                         currentLanguage = currentLanguage,
+                        errorMessage = parkingStatusError,
+                        onRetry = { parkingViewModel.retryStatus() },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
@@ -793,25 +826,22 @@ fun MapScreen(
                             .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
                     )
                 }
-            } else if (selectedStationVDetail != null) {
-                val positionCorrespondante = visibleStationsV.find { it.stationId == selectedStationVDetail!!.stationId }
-                    ?: StationVPositionDto(0L, selectedStationVDetail!!.stationId, selectedStationVDetail!!.nom ?: "Station", selectedStationVDetail!!.latitude, selectedStationVDetail!!.longitude)
-
-                key(currentLanguage) {
-                    StationVBubble(
-                        position = selectedStationV!!,
-                        detail = selectedStationVDetail,
-                        loading = bubbleLoadingV,
-                        errorMessage = stationVDetailError,
-                        onRetry = { stationVViewModel.retryDetail() },
-                        onClose = { stationVViewModel.closeBubble() },
-                        languageViewModel = languageViewModel,
-                        currentLanguage = currentLanguage,
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
-                    )
-                }
+            } else if (selectedStationV != null) {
+        key(currentLanguage) {
+            StationVBubble(
+                position = selectedStationV!!,
+                detail = selectedStationVDetail,
+                loading = bubbleLoadingV,
+                errorMessage = stationVDetailError,
+                onRetry = { stationVViewModel.retryDetail() },
+                onClose = { stationVViewModel.closeBubble() },
+                languageViewModel = languageViewModel,
+                currentLanguage = currentLanguage,
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)
+            )
+        }
             } else if (selectedStationTer != null) {
                 key(currentLanguage) {
                     StationTerBubble(
@@ -836,6 +866,8 @@ fun MapScreen(
                         onClose = { freeVehicleViewModel.closeBubble() },
                         languageViewModel = languageViewModel,
                         currentLanguage = currentLanguage,
+                        errorMessage = freeVehicleDetailError,
+                        onRetry = { freeVehicleViewModel.retryDetail() },
                         modifier = Modifier
                             .align(Alignment.BottomCenter)
                             .padding(bottom = 32.dp, start = 16.dp, end = 16.dp)

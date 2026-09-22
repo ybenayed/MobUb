@@ -4,15 +4,21 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.ObservatoireCampus.mobile.repository.MapRepository
-import com.ObservatoireCampus.mobile.model.CampusDto
 import com.ObservatoireCampus.mobile.model.BatimentDto
+import com.ObservatoireCampus.mobile.model.CampusDto
 import com.ObservatoireCampus.mobile.model.InstitutionColorDto
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
+import com.ObservatoireCampus.mobile.network.toUserMessage
+import com.ObservatoireCampus.mobile.repository.MapRepository
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
-import  kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 class MapViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -27,9 +33,13 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     private val _legendList = MutableStateFlow<List<InstitutionColorDto>>(emptyList())
     val legendList: StateFlow<List<InstitutionColorDto>> = _legendList
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> = _error
+    // Deux sources d'erreur, regroupees en une seule (sans doublon) pour le bandeau
+    private val _campusError = MutableStateFlow<String?>(null)
+    private val _legendError = MutableStateFlow<String?>(null)
 
+    val error: StateFlow<String?> = combine(_campusError, _legendError) { campus, legend ->
+        listOfNotNull(campus, legend).distinct().joinToString(" | ").ifEmpty { null }
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, null)
 
     init {
         loadCampus()
@@ -39,10 +49,13 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     fun loadLegend() {
         viewModelScope.launch {
             try {
-                val legend = repository.getInstitutionColors()
-                _legendList.value = legend
+                _legendList.value = repository.getInstitutionColors()
+                _legendError.value = null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                Log.e("MapViewModel", ">>> ERREUR légende: ${e.message}", e)
+                Log.e("MapViewModel", ">>> ERREUR legende: ${e.message}", e)
+                _legendError.value = e.toUserMessage()
             }
         }
     }
@@ -52,18 +65,21 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
             try {
                 val result = repository.getCampus()
                 _campusList.value = result
-                _error.value = null
 
-                // Exécution en parallèle de toutes les requêtes de bâtiments avec async/awaitAll
-                val allBatiments = kotlinx.coroutines.coroutineScope {
+                // Execution en parallele de toutes les requetes de batiments
+                val allBatiments = coroutineScope {
                     result.map { campus ->
                         async { repository.getBatiments(campus.id) }
                     }.awaitAll().flatten()
                 }
 
                 _batimentList.value = allBatiments
+                _campusError.value = null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                _error.value = e.message
+                Log.e("MapViewModel", ">>> ERREUR campus/batiments: ${e.message}", e)
+                _campusError.value = e.toUserMessage()
             }
         }
     }
@@ -71,10 +87,13 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     fun loadBatiments(campusId: Long) {
         viewModelScope.launch {
             try {
-                val result = repository.getBatiments(campusId)
-                _batimentList.value = result
+                _batimentList.value = repository.getBatiments(campusId)
+                _campusError.value = null
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
-                Log.e("MapViewModel", ">>> ERREUR bâtiments: ${e.message}", e)
+                Log.e("MapViewModel", ">>> ERREUR batiments: ${e.message}", e)
+                _campusError.value = e.toUserMessage()
             }
         }
     }
