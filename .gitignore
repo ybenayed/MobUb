@@ -13,8 +13,4 @@ target/
 .idea/
 *.iml
 
-# Données OTP générées/téléchargées, ne pas versionner
-otp-service/otp-data/*.osm.pbf
-otp-service/otp-data/*.osm.pbf.bak
-otp-service/otp-data/*.zip
 
