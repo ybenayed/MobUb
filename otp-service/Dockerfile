@@ -8,7 +8,7 @@ COPY otp-data/otp-config.json    ./otp-config.json
 COPY otp-data/router-config.json ./router-config.json
 
 # Construction du graphe en indiquant directement le dossier cible
-RUN /docker-entrypoint.sh --build /var/opentripplanner
+RUN /docker-entrypoint.sh /var/opentripplanner
 
 EXPOSE 8080
 
