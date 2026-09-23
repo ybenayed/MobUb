@@ -7,12 +7,9 @@ COPY otp-data/aquitaine.osm.pbf  ./aquitaine.osm.pbf
 COPY otp-data/otp-config.json    ./otp-config.json
 COPY otp-data/router-config.json ./router-config.json
 
-# Construction du graphe en appelant directement le fichier jar via la variable du conteneur ou find
-RUN java -Xmx400m -jar /usr/bin/otp.jar --build .
-
 EXPOSE 8080
 
 ENV JAVA_OPTIONS="-Xmx450m"
 
-# Lancement du serveur
+# Lancement par défaut du serveur
 CMD ["--server", "/var/opentripplanner"]
