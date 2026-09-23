@@ -2,17 +2,17 @@ FROM opentripplanner/opentripplanner@sha256:e4c7c39f7a5ac2f6195331df4348ddac04bb
 
 WORKDIR /var/opentripplanner
 
-# Copie des fichiers de configuration et de données openstreetmap
+# Copie des fichiers de configuration et de données
 COPY otp-data/aquitaine.osm.pbf  ./aquitaine.osm.pbf
 COPY otp-data/otp-config.json    ./otp-config.json
 COPY otp-data/router-config.json ./router-config.json
 
-# Étape 1 : Construction du graphe au build (l'image sait exécuter OTP nativement sans java -jar)
-RUN otp --build .
+# Construction du graphe avec le classpath complet de l'image officielle
+RUN java -cp "/app/libs/*" org.opentripplanner.standalone.OTPMain --build .
 
 EXPOSE 8080
 
 ENV JAVA_OPTIONS="-Xmx450m"
 
-# Étape 2 : Lancement du serveur au démarrage du conteneur
+# Lancement du serveur en mode conteneur persistant
 CMD ["--server", "."]
