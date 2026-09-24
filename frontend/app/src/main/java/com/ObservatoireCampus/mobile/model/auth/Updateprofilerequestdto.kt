@@ -2,7 +2,6 @@ package com.ObservatoireCampus.mobile.model.auth
 
 /**
  * Correspond a UpdateUserRequest cote backend.
- * Le username n'est pas modifiable (identifiant du compte / sujet du JWT).
  */
 data class UpdateProfileRequestDto(
     val email: String,

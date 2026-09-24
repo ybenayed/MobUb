@@ -84,10 +84,8 @@ public class UserService {
         return UserResponse.fromEntity(saved);
     }
 
-    /**
-     * Changement de mot de passe depuis le screen "Mon compte" : verifie
-     * l'ancien mot de passe avant d'ecrire le nouveau (hashe) en base.
-     */
+    // Changement de mot de passe : verifie l'ancien mot de passe avant d'ecrire le nouveau (hashe) en base.
+     
     @Transactional
     public void changePassword(String username, ChangePasswordRequest request) {
         User user = userRepository.findByUsername(username)
@@ -138,11 +136,7 @@ public class UserService {
                 .build();
     }
 
-    /**
-     * Normalise une valeur texte libre pour l'agregation :
-     * trim + capitalisation "Titre" pour regrouper "tunisie", "Tunisie ", "TUNISIE"
-     * sous une seule cle affichable "Tunisie".
-     */
+    
     private String normalizeLabel(String value) {
         if (value == null || value.isBlank()) {
             return "Non renseigne";

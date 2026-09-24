@@ -5,12 +5,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 
-/**
- * Un segment (leg) d'un itineraire sauvegarde : marche, bus, velo...
- * Miroir persistant de LegDTO. sequenceOrder garde l'ordre du trajet
- * (WALK -> BUS -> WALK), indispensable car une List JPA sans @OrderColumn
- * ne garantit pas l'ordre de retour.
- */
+// Un segment (leg) d'un itineraire sauvegarde : marche, bus, velo...
 @Entity
 @Table(name = "search_history_leg")
 @Getter
@@ -55,7 +50,6 @@ public class SearchHistoryLeg {
     })
     private PlaceRef to;
 
-    /** Nom court de la ligne (route.shortName), null si mode != transport en commun. */
     @Column(name = "route_name")
     private String routeName;
 

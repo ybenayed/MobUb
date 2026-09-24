@@ -23,11 +23,7 @@ import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusTextWhite
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
-/**
- * Barre de navigation superieure : icone menu ou retour + marque MobUB.
- * Meme couleur de fond (ObcampusPrimary) que le bouton "Se connecter" du
- * login, pour une identite visuelle coherente dans toute l'appli.
- */
+
 @Composable
 fun TopBar(
     languageViewModel: LanguageViewModel,

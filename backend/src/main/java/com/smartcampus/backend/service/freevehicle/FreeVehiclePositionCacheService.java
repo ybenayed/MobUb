@@ -26,7 +26,7 @@ public class FreeVehiclePositionCacheService {
     private static final String FREE_BIKE_STATUS_URL =
         "https://services.rideyego.com/gbfs/2-2/bordeaux/fr/free_bike_status";
 
-    // cache thread-safe, mis a jour toutes les 10s - SEULE source de verite desormais
+    // cache thread-safe, mis a jour toutes les 10s 
     private final AtomicReference<List<JsonNode>> cache = new AtomicReference<>(Collections.emptyList());
 
     @PostConstruct
@@ -52,7 +52,7 @@ public class FreeVehiclePositionCacheService {
         }
     }
 
-    // ─── LECTURE (jamais d'appel HTTP ici, juste lecture du cache)
+    //  (jamais d'appel HTTP ici, juste lecture du cache)
 
     public List<FreeVehiclePositionDTO> getAllPositions() {
         return cache.get().stream().map(this::toPositionDTO).toList();
@@ -72,7 +72,6 @@ public class FreeVehiclePositionCacheService {
                 .orElse(null);
     }
 
-    // NOUVEAU : expose tout le cache brut, utilise par FreeVehicleInfoService
     public List<JsonNode> getAllRawVehicles() {
         return cache.get();
     }

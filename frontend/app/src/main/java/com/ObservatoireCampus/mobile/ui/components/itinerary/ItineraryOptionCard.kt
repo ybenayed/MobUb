@@ -117,8 +117,6 @@ fun ItineraryOptionCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Bouton "Enregistrer" : clic sur le bouton uniquement, ne declenche
-            // pas onClick() de la Card (le Button interne consomme le tap).
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End,

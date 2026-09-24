@@ -21,19 +21,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Partie DYNAMIQUE : prochains passages en gare (temps reel Navitia/SNCF).
- * JAMAIS persiste en base (donnee volatile par nature).
- *
- * ATTENTION QUOTA : le token SNCF est limite en nombre de requetes.
- * Un cache par gare avec TTL est donc INDISPENSABLE, pas juste
- * une optimisation.
- *
- * NOTE TEMPS REEL : sans le parametre data_freshness=realtime, Navitia ne
- * renvoie que l'horaire theorique. Meme avec ce parametre, seuls les trains
- * pour lesquels la SNCF envoie une mise a jour sont marques "realtime" ;
- * les autres restent en "base_schedule" (horaire theorique).
- */
+
 @Slf4j
 @Service
 public class PassageTerService {
@@ -48,12 +36,10 @@ public class PassageTerService {
     @Value("${navitia.cache-ttl-seconds:60}")
     private long cacheTtlSeconds;
 
-    // Fuseau horaire local (Bordeaux/Paris) et formatteurs
     private static final ZoneId BORDEAUX_ZONE = ZoneId.of("Europe/Paris");
     private static final DateTimeFormatter NAVITIA_DATETIME = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    // data_freshness=realtime : demande a Navitia d'inclure les mises a jour temps reel (retards, suppressions)
     private static final String DEPARTURES_TEMPLATE =
             "{baseUrl}/stop_areas/{stopId}/departures?count=10&data_freshness=realtime";
 
@@ -81,7 +67,7 @@ public class PassageTerService {
         try {
             entry = cache.get(navitiaStopId);
             if (entry != null && !entry.isExpired()) {
-                return entry.passages(); // un autre thread a deja rafraichi entre-temps
+                return entry.passages(); 
             }
 
             List<PassageTerDTO> fresh = fetchFromApi(navitiaStopId);
@@ -153,11 +139,7 @@ public class PassageTerService {
         return passages;
     }
 
-    /**
-     * Convertit une chaine de date Navitia (ex: "20260908T163000")
-     * vers le format lisible "HH:mm" (ex: "16:30"). Navitia renvoie deja
-     * l'heure locale, on ne fait donc aucune conversion de fuseau.
-     */
+
     private String formatToBordeauxTime(String navitiaDateTimeStr) {
         if (navitiaDateTimeStr == null || navitiaDateTimeStr.isBlank()) {
             return null;

@@ -2,7 +2,6 @@ package com.ObservatoireCampus.mobile.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -74,7 +73,6 @@ import org.osmdroid.views.overlay.Polyline
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.ObservatoireCampus.mobile.model.search.history.SearchHistoryDto
-import com.ObservatoireCampus.mobile.model.station.StationVPositionDto
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 import com.ObservatoireCampus.mobile.viewmodel.AppLanguage
 import com.ObservatoireCampus.mobile.viewmodel.search.SearchViewModel
@@ -96,10 +94,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
-import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.List
 
-/** Indique quel champ du panneau itineraire attend la position GPS de l'utilisateur. */
 private enum class ItineraryLocationTarget { ORIGIN, DESTINATION }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -299,7 +295,6 @@ fun MapScreen(
             .distinct()
             .takeIf { it.isNotEmpty() }
             ?.joinToString(" | ")
-    // Relance uniquement les chargements qui ont echoue (les autres ne sont pas touches)
     val retryFailedLoads: () -> Unit = {
         if (viewModel.error.value != null) {
             viewModel.loadCampus()
@@ -312,8 +307,7 @@ fun MapScreen(
         if (freeVehicleViewModel.error.value != null) freeVehicleViewModel.loadStations()
     }
 
-    // Nouvel essai automatique toutes les 10 s tant qu'il y a une erreur.
-    // Des que tout est charge, l'erreur disparait et la boucle s'arrete toute seule.
+
     val hasLoadError = combinedError != null
     LaunchedEffect(hasLoadError) {
         if (hasLoadError) {
@@ -378,7 +372,6 @@ fun MapScreen(
         }
     }
 
-    // Dessine / efface le trace des qu'une option d'itineraire est selectionnee.
     LaunchedEffect(selectedItinerary, mapView) {
         val mp = mapView ?: return@LaunchedEffect
         clearItineraryRoute(mp, itineraryRoutePolylines)
@@ -397,10 +390,6 @@ fun MapScreen(
                 .flatMap { listOf(GeoPoint(it.fromLat, it.fromLon), GeoPoint(it.toLat, it.toLon)) }
             val distinctPoints = points.distinct()
 
-            // Garde-fou : une bounding box de largeur/hauteur quasi nulle (un seul
-            // point distinct, trajet tres court, ou vieil historique sans
-            // coordonnees) fait boucler/freezer zoomToBoundingBox() dans osmdroid.
-            // On centre manuellement dans ce cas plutot que de zoomer sur une box.
             when {
                 distinctPoints.size >= 2 -> {
                     val box = BoundingBox.fromGeoPoints(points)
@@ -417,14 +406,10 @@ fun MapScreen(
                     mp.controller.setZoom(17.0)
                     mp.controller.animateTo(distinctPoints.first())
                 }
-                // sinon : vieil historique sans coordonnees valides, on ne touche pas la camera
             }
             onHistoryItemShown()
         }
 
-        // La MapView vient parfois d'etre recreee (retour depuis l'Historique) et n'a
-        // pas encore ete mesuree par Android : zoomToBoundingBox() ne fait rien tant
-        // que width/height valent 0. On attend le premier passage de layout reel.
         if (mp.width > 0 && mp.height > 0) {
             drawAndZoom()
         } else {
@@ -437,7 +422,6 @@ fun MapScreen(
         }
     }
 
-    // Toast simple apres tentative d'enregistrement dans l'historique.
     LaunchedEffect(saveHistoryMessage) {
         saveHistoryMessage?.let { msg ->
             android.widget.Toast.makeText(context, msg, android.widget.Toast.LENGTH_SHORT).show()
@@ -532,17 +516,7 @@ fun MapScreen(
                 .fillMaxSize()
                 .background(ObcampusBackground)
         ) {
-            // CORRECTIF : le key(displayedCampusList) qui entourait cet appel a ete
-            // retire. displayedCampusList change de reference a chaque traduction
-            // (LaunchedEffect(currentLanguage, campusList) cree une nouvelle liste),
-            // et key() detruisait alors ENTIEREMENT CampusMap -> demontait la MapView
-            // osmdroid en cours et en remontait une nouvelle. Si ca se produisait juste
-            // apres un retour depuis l'Historique, le listener de layout pose sur
-            // l'ancienne MapView (dans le LaunchedEffect(historyItemToShow, mapView)
-            // de ce fichier) ne se declenchait jamais car une vue detachee n'emet plus
-            // d'evenements de layout -> "Voir sur la carte" ne dessinait jamais rien.
-            // CampusMap reagit deja en interne aux changements de campusList via son
-            // propre LaunchedEffect, pas besoin de le detruire/recreer pour ca.
+
             CampusMap(
                 campusList = displayedCampusList,
                 showPolygons = showCampus,
@@ -745,7 +719,6 @@ fun MapScreen(
                     .padding(top = 6.dp, end = 62.dp)
             )
 
-            // Conteneur aligné en bas à droite pour le Zoom et le Bouton Légende
             Column(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)

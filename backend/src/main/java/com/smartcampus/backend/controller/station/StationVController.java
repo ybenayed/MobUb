@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
+// Controller pour la gestion des stations de vélo en libre-service
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -23,16 +23,13 @@ public class StationVController {
     private final StationVService stationVService;             // STATIQUE
     private final StationVStatusService stationVStatusService; // DYNAMIQUE
 
-    // ─── GROUPE 1 - Import / Admin
+    //Import
 
     @PostMapping("/import")
     public ResponseEntity<Map<String, Integer>> importStations() {
         log.info(">> Import stations velo depuis API GBFS");
         return ResponseEntity.ok(Map.of("imported", stationVService.importStationsFromApi()));
     }
-
-    // ─── GROUPE 2 - API Front (lecture seule, statique)
-
     @GetMapping
     public ResponseEntity<List<StationVDTO>> getAllStationsV() {
         return ResponseEntity.ok(stationVService.getAllStations());
@@ -43,11 +40,7 @@ public class StationVController {
         return ResponseEntity.ok(stationVService.getAllPositions());
     }
 
-    // ─── GROUPE 3 - Info d'une station donnee (statique + dynamique jointes)
-
-    /**
-     * GET /api/stationV/1
-     */
+    // Temps reel (dynamique)
     @GetMapping("/{stationId}")
     public ResponseEntity<StationVDetailDTO> getStationDetail(@PathVariable String stationId) {
         return stationVStatusService.getStationDetail(stationId)

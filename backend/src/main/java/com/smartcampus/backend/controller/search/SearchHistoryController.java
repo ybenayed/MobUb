@@ -11,11 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Historique des recherches d'itineraire, par utilisateur connecte (JWT).
- * On identifie toujours l'utilisateur via Authentication, jamais via un id
- * dans l'URL, meme principe que UserController#updateCurrentUser.
- */
+//Historique des recherches d'itineraire, par utilisateur connecte (JWT)
 @RestController
 @RequestMapping("/api/search-history")
 @RequiredArgsConstructor

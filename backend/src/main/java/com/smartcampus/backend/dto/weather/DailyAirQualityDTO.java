@@ -11,7 +11,7 @@ public class DailyAirQualityDTO {
     private Double pm10Avg;
     private Double ozoneAvg;
     private Double nitrogenDioxideAvg;
-    private Integer europeanAqiMax; // pire valeur de la journee -> sert a la conversion icone/signification
+    private Integer europeanAqiMax; // pire valeur de la journee ( sert a la conversion icone/signification)
     private String category;
     private String description;
     private String icon;

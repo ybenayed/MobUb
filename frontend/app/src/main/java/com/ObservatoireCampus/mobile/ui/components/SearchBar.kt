@@ -28,7 +28,7 @@ fun SearchBar(
     suggestions: List<SearchResultDto>,
     onQueryChange: (String) -> Unit,
     onSuggestionSelected: (SearchResultDto) -> Unit,
-    onOpenItinerary: () -> Unit = {}, // <-- ouvre le panneau itinéraire (bottom sheet)
+    onOpenItinerary: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
@@ -74,7 +74,6 @@ fun SearchBar(
             )
         }
 
-        // Fenêtre d'autocomplétion (Dropdown) sous la barre de recherche
         if (suggestions.isNotEmpty()) {
             Spacer(modifier = Modifier.height(6.dp))
             Card(

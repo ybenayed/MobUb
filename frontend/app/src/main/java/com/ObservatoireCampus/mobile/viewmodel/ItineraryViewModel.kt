@@ -175,12 +175,12 @@ class ItineraryViewModel : ViewModel() {
         originJob?.cancel()
         _originLoading.value = false
         _originPoint.value = SearchResultDto(
-            name = CURRENT_LOCATION_MARKER,   // <-- toujours le meme marqueur, jamais traduit
+            name = CURRENT_LOCATION_MARKER,
             latitude = latitude,
             longitude = longitude,
             subtitle = ""
         )
-        _originQuery.value = displayLabel     // <-- ce que l'utilisateur voit dans le champ, traduit en direct
+        _originQuery.value = displayLabel
         _originSuggestions.value = emptyList()
     }
 
@@ -256,10 +256,6 @@ class ItineraryViewModel : ViewModel() {
 
     // ----- Recherche -----
 
-    /**
-     * PMR retire : il n'y a plus que 2 branches (velo perso vs le reste),
-     * computeAccessibleItinerary n'existe plus.
-     */
     fun submitItinerary() {
         val origin = _originPoint.value
         val destination = _destinationPoint.value
@@ -288,11 +284,9 @@ class ItineraryViewModel : ViewModel() {
                     itineraryRepository.computeItinerary(origin, destination, currentFilters)
                 }
 
-                // Une seule proposition par sequence de modes (pas de doublons).
                 _itineraryOptions.value = options.deduplicatedByModeSequence()
 
                 if (options.isEmpty()) {
-                    // Pas une panne : le serveur a repondu, mais aucun trajet n'existe.
                     _searchError.value = "Aucun itineraire trouve"
                 }
                 Log.d(TAG, "${options.size} itineraire(s) recu(s) du backend, ${_itineraryOptions.value.size} apres dedup")
@@ -300,7 +294,6 @@ class ItineraryViewModel : ViewModel() {
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Echec du calcul d'itineraire", e)
-                // Message adapte au type d'erreur (pas de connexion, serveur en panne, delai depasse...)
                 _searchError.value = e.toUserMessage(ErrorContext.ITINERARY)
             } finally {
                 _isSearching.value = false
@@ -308,7 +301,6 @@ class ItineraryViewModel : ViewModel() {
         }
     }
 
-    /** Appele quand l'utilisateur choisit "Voir sur la carte" dans la popup de details. */
     fun selectItinerary(option: ItineraryOptionDto) {
         _selectedItinerary.value = option
     }

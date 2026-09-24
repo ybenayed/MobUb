@@ -17,7 +17,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("String", "BASE_URL", "\"https://mobub-backend.onrender.com/\"")
+            buildConfigField("String", "BASE_URL", "\"http://10.178.47.195:8080/\"")
         }
         release {
             isMinifyEnabled = false
@@ -54,9 +54,17 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation("androidx.compose.material:material-icons-extended:1.6.7")
     implementation("androidx.webkit:webkit:1.10.0")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
+
+    // Navigation : les trois modules doivent avoir EXACTEMENT la même version.
+    // navigation-common (NavType, navArgument, NavDestination...) et
+    // navigation-runtime sont déclarés explicitement pour corriger les erreurs
+    // "Cannot access class androidx.navigation.NavDestination...".
+    val navVersion = "2.7.7"
+    implementation("androidx.navigation:navigation-compose:$navVersion")
+    implementation("androidx.navigation:navigation-common:$navVersion")
+    implementation("androidx.navigation:navigation-runtime:$navVersion")
+
     implementation("io.coil-kt:coil-compose:2.6.0")
     implementation("com.google.android.gms:play-services-location:21.3.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3")

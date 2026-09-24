@@ -22,6 +22,5 @@ public class ErrorResponse {
     private String message;
     private String path;
 
-    /** Rempli uniquement en cas d'erreurs de validation champ par champ. */
     private Map<String, String> fieldErrors;
 }

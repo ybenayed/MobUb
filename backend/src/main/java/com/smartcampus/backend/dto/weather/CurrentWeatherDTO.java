@@ -8,7 +8,7 @@ public class CurrentWeatherDTO {
     private Double windspeed;
     private Integer winddirection;
     private Integer weathercode;
-    private String description; // deduit du weathercode + is_day
+    private String description; // deduit du weathercode
     private String icon;
     private String time;
     private Integer isDay;

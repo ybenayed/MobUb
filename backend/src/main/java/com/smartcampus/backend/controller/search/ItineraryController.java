@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Map;
-
+// Controller pour le calcul d'itinéraires à partir de l'API OpenTripPlanner (OTP)
 @RestController
 @RequestMapping("/api")
 public class ItineraryController {
@@ -27,7 +27,7 @@ public class ItineraryController {
         this.otpItineraryService = otpItineraryService;
     }
 
-    /** Comportement par defaut : toutes les options, triees par duree. */
+    // Comportement par defaut : toutes les options, triees par duree. 
     @PostMapping("/itinerary")
     public ResponseEntity<?> computeItinerary(@RequestBody ItineraryRequestDTO request) {
         return respond(request, () -> otpItineraryService.computeItinerary(request));
@@ -63,7 +63,7 @@ public class ItineraryController {
         return respond(request, () -> otpItineraryService.computeBicycleItineraries(request));
     }
 
-    /** Utilitaire de test rapide : juste le nombre d'itineraires proposes par OTP. */
+    // le nombre d'itineraires proposes par OTP
     @PostMapping("/itinerary/count")
     public ResponseEntity<?> count(@RequestBody ItineraryRequestDTO request) {
         if (request.getOrigin() == null || request.getDestination() == null) {
@@ -73,7 +73,6 @@ public class ItineraryController {
         return ResponseEntity.ok(Map.of("count", count));
     }
 
-    // ------------------------------------------------------------------
 
     private interface ItinerarySupplier {
         List<ItineraryOptionDTO> get();

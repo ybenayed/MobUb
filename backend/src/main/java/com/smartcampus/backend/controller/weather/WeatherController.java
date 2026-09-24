@@ -13,7 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+// Controller pour la gestion de la météo
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/weather")
@@ -23,7 +23,7 @@ public class WeatherController {
     private final WeatherLiveCacheService weatherLiveCacheService;
     private final WeatherQueryService weatherQueryService;
 
-    // ─── Meteo "campus" en cache (rafraichie toutes les 30 min) ───
+    // Meteo "campus" en cache (rafraichie toutes les 30 min) ───
 
     @GetMapping("/summary")
     public ResponseEntity<WeatherSummaryDTO> getSummary() {
@@ -54,7 +54,7 @@ public class WeatherController {
         return ResponseEntity.ok(weatherLiveCacheService.getPastDaily());
     }
 
-    // ─── Meteo a la demande pour des coordonnees/date/heure arbitraires ───
+    // Meteo a la demande pour des coordonnees/date/heure arbitraires ───
 
     @PostMapping("/at")
     public ResponseEntity<?> getWeatherAt(@RequestBody WeatherRequestDTO request) {

@@ -184,7 +184,6 @@ private fun ModeBarRow(modeCount: AdminModeCountDto, maxCount: Long) {
     }
 }
 
-/** Convertit des grammes en kg avec 1 decimale, ex: 12450.0 -> "12.5" */
 private fun formatCo2Kg(grams: Double): String {
     val kg = grams / 1000.0
     return String.format("%.1f", kg)

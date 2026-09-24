@@ -21,10 +21,9 @@ fun ParkingDrawerSection(
 ) {
     var translatedTitle by remember { mutableStateOf("Parking") }
 
-    // Map pour stocker la traduction de chaque type de parking (clé -> libellé traduit)
+    // Map pour stocker la traduction de chaque type de parking
     var translatedItemLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
-    // Gère la traduction asynchrone du titre et de tous les types de sous-items à chaque changement de langue
     LaunchedEffect(currentLanguage, items) {
         translatedTitle = languageViewModel.translate("Parking")
 
@@ -43,7 +42,6 @@ fun ParkingDrawerSection(
         onExpandToggle = onExpandToggle,
         onMasterToggle = onMasterToggle,
         onItemToggle = onItemToggle,
-        // On passe les libellés traduits ici. Si la traduction n'est pas encore prête, on affiche la clé par défaut.
         itemLabel = { key -> translatedItemLabels[key] ?: key }
     )
 }

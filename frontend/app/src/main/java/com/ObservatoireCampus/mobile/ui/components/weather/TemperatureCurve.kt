@@ -26,8 +26,8 @@ import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 fun TemperatureCurve(
     points: List<HourlyWeatherPointDto>,
     selectedIndex: Int,
-    languageViewModel: LanguageViewModel, // <-- AJOUT
-    currentLanguage: AppLanguage,          // <-- AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage,
     modifier: Modifier = Modifier
 ) {
     var showInfo by remember { mutableStateOf(false) }

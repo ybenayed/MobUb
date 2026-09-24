@@ -22,7 +22,6 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polyline
 import org.osmdroid.views.overlay.infowindow.InfoWindow
 
-/** Bulle personnalisée élégante aux couleurs du trajet */
 class CustomLineInfoWindow(
     mapView: MapView,
     titleText: String,
@@ -89,9 +88,7 @@ fun drawItineraryRoute(mapView: MapView, itinerary: ItineraryOptionDto): List<Po
     return polylines
 }
 
-/**
- * Trace un itineraire depuis l'historique.
- */
+
 fun drawHistoryRoute(mapView: MapView, item: SearchHistoryDto): List<Polyline> {
     val polylines = item.legs
         .filter { leg -> leg.fromLat != 0.0 && leg.toLat != 0.0 }

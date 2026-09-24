@@ -14,7 +14,6 @@ interface SearchHistoryApi {
     @POST("/api/search-history")
     suspend fun save(@Body request: SaveSearchHistoryRequestDto): Response<SearchHistoryDto>
 
-    /** Utilisateur identifie via le JWT (AuthInterceptor), jamais via un id dans l'URL. */
     @GET("/api/search-history/me")
     suspend fun getMyHistory(): Response<List<SearchHistoryDto>>
 

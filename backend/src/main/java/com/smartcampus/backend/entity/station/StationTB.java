@@ -23,8 +23,8 @@ public class StationTB {
     private String stopId;      // ex: bordeaux:StopPoint:BP:3729:LOC
 
     private String nom;
-    private String stopAreaRef; // ex: bordeaux:StopPoint:BP:TMONTA:LOC
-    private String mode;        // BUS / TRAM / INCONNU - deduit du prefixe de stopAreaRef
+    private String stopAreaRef; 
+    private String mode;        // BUS / TRAM / INCONNU 
 
     private Double latitude;
     private Double longitude;

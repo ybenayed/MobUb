@@ -1,4 +1,0 @@
-{
-  "osmDefaults": { "osmTagMapping": "default" },
-  "transitFeeds": { "stationTransfers": true }
-}

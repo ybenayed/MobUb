@@ -29,8 +29,8 @@ object RetrofitClient {
         }
         OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(tokenManager))
-            .connectTimeout(5, TimeUnit.SECONDS)   // serveur injoignable : erreur rapide
-            .readTimeout(30, TimeUnit.SECONDS)     // reponse lente (ex: calcul d'itineraire)
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
             .build()
     }
@@ -43,7 +43,6 @@ object RetrofitClient {
             .build()
     }
 
-    // AJOUT : manquait completement
     val authApi: AuthApi by lazy { retrofit.create(AuthApi::class.java) }
 
     val campusApi: CampusApi by lazy { retrofit.create(CampusApi::class.java) }
@@ -57,9 +56,6 @@ object RetrofitClient {
     val geocodingApi: GeocodingApi by lazy { retrofit.create(GeocodingApi::class.java) }
     val itineraryApi: ItineraryApi by lazy { retrofit.create(ItineraryApi::class.java) }
     val batimentApi: BatimentApi by lazy { retrofit.create(BatimentApi::class.java) }
-
-    // Pratique pour AuthRepository, qui a aussi besoin du TokenManager
-    // (pour lire isLoggedIn() / logout() sans dupliquer le SharedPreferences).
     fun getTokenManager(): TokenManager = tokenManager
     val searchHistoryApi: SearchHistoryApi by lazy { retrofit.create(SearchHistoryApi::class.java) }
 
@@ -67,4 +63,7 @@ object RetrofitClient {
     val adminInfrastructureApi: AdminInfrastructureApi by lazy { retrofit.create(AdminInfrastructureApi::class.java) }
 
     val adminLegendApi: AdminLegendApi by lazy { retrofit.create(AdminLegendApi::class.java) }
+
+    val nationalityApi: NationalityApi by lazy { retrofit.create(NationalityApi::class.java) }
+
 }

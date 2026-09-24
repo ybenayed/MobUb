@@ -27,8 +27,8 @@ fun WeekDayNavigator(
     selectedDate: LocalDate,
     onPrevious: () -> Unit,
     onNext: () -> Unit,
-    languageViewModel: LanguageViewModel, // <-- AJOUT
-    currentLanguage: AppLanguage,          // <-- AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage,
     modifier: Modifier = Modifier,
     minDate: LocalDate = LocalDate.now().minusDays(7),
     maxDate: LocalDate = LocalDate.now().plusDays(6)

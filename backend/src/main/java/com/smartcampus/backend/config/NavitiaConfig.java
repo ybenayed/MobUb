@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.support.BasicAuthenticationInterceptor;
 import org.springframework.web.client.RestTemplate;
-
+// token pour l'API navitia, a mettre dans le fichier application.properties
 @Configuration
 public class NavitiaConfig {
 
@@ -16,7 +16,6 @@ public class NavitiaConfig {
     public RestTemplate navitiaRestTemplate() {
         RestTemplate restTemplate = new RestTemplate();
         
-        // Ajoute automatiquement l'en-tête "Authorization: Basic <token_encodé>"
         restTemplate.getInterceptors().add(
             new BasicAuthenticationInterceptor(navitiaToken, "")
         );

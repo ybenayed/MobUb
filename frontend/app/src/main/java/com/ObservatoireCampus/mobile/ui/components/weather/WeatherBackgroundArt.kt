@@ -18,14 +18,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 
-/**
- * Habillage visuel de l'ecran Meteo.
- * - Zone agrandie (280dp au lieu de 200dp) pour une meilleure visibilite d'ensemble
- *   (date, navigation, courbe).
- * - Affiche la VRAIE icone meteo du moment (soleil / nuage / pluie / etc., deja fournie
- *   par le backend via WeatherCodeResolver -> icone OpenWeatherMap selon le weathercode),
- *   en grand, plutot que des icones generiques statiques.
- */
+
 @Composable
 fun WeatherBackgroundArt(
     currentIconUrl: String? = null,

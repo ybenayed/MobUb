@@ -4,7 +4,7 @@ services:
     container_name: otp_bordeaux_build
     profiles: ["build"]
     environment:
-      - JAVA_OPTIONS=-Xmx3G
+      - JAVA_TOOL_OPTIONS=-Xmx6G
     volumes:
       - ./otp-service/otp-data:/var/opentripplanner
     command: ["--build", "--save"]
@@ -13,7 +13,7 @@ services:
     image: opentripplanner/opentripplanner:latest
     container_name: otp
     environment:
-      - JAVA_OPTIONS=-Xmx2G
+      - JAVA_TOOL_OPTIONS=-Xmx4G
     volumes:
       - ./otp-service/otp-data:/var/opentripplanner
     ports:

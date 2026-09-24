@@ -2,7 +2,7 @@ package com.smartcampus.backend.dto.parking;
 
 import lombok.*;
 import java.time.OffsetDateTime;
-
+//dto pour le status d'un parking 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class ParkingStatusDTO {
     private Long id;

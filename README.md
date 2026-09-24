@@ -61,7 +61,7 @@ JWT_SECRET=une_chaine_secrete_longue_et_aleatoire
 ADMIN_PASSWORD=mot_de_passe_du_compte_admin
 ```
 
-> ⚠️ Ne partage jamais ce fichier `.env` et ne le commite jamais dans Git. Ajoute `.env` à ton fichier `.gitignore` pour éviter tout risque d'oubli.
+> Ne partage jamais ce fichier `.env` et ne le commite jamais dans Git. Ajoute `.env` à ton fichier `.gitignore` pour éviter tout risque d'oubli.
 
 ---
 

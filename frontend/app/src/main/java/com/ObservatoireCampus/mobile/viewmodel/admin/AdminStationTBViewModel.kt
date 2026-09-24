@@ -11,11 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel partage par les onglets Bus et Tram : StationTB est une seule
- * entite cote backend, distinguee par le champ "mode". On filtre ici
- * sur le mode fixe passe au constructeur ("BUS" ou "TRAM").
- */
+
 class AdminStationTBViewModel(
     private val repository: AdminInfrastructureRepository,
     private val mode: String

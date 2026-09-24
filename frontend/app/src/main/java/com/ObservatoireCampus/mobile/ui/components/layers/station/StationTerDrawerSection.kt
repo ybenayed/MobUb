@@ -16,8 +16,8 @@ fun StationTerDrawerSection(
     onExpandToggle: () -> Unit,
     onMasterToggle: () -> Unit,
     onItemToggle: (String) -> Unit,
-    languageViewModel: LanguageViewModel, // AJOUT
-    currentLanguage: AppLanguage           // AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage
 ) {
     var translatedTitle by remember { mutableStateOf("TER") }
     var translatedItemLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }

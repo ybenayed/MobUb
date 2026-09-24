@@ -8,7 +8,7 @@ public class StationTBRequestDTO {
     private String stopId;
     private String nom;
     private String stopAreaRef;
-    private String mode; // optionnel : deduit du stopAreaRef si absent
+    private String mode; 
     private Double latitude;
     private Double longitude;
     private List<String> lines;

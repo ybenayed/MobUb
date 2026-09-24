@@ -72,9 +72,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception ex,
                                                                     HttpServletRequest request) {
-        // CORRECTION : on loguait rien avant -> impossible de diagnostiquer un 500.
-        // Le client recoit toujours un message generique (securite), mais la vraie
-        // cause est maintenant tracee cote serveur.
+
         log.error("Erreur non geree sur {} {}", request.getMethod(), request.getRequestURI(), ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR,
                 "Une erreur inattendue est survenue", request, null);

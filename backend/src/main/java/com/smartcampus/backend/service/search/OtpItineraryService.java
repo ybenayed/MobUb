@@ -190,9 +190,7 @@ public class OtpItineraryService {
         return merged;
     }
 
-    // ------------------------------------------------------------------
     // Coeur : un seul point d'appel OTP, reutilise par toutes les methodes ci-dessus
-    // ------------------------------------------------------------------
 
     private List<ItineraryOptionDTO> fetchAndEnrich(ItineraryRequestDTO request, String cyclingOptimizationType) {
         List<String> modes = (request.getModes() != null && !request.getModes().isEmpty())
@@ -252,9 +250,7 @@ public class OtpItineraryService {
         return results;
     }
 
-    // ------------------------------------------------------------------
     // Construction des variables GraphQL (structure imbriquee du nouveau schema)
-    // ------------------------------------------------------------------
 
     private Map<String, Object> locationVariable(double lat, double lon) {
         return Map.of("location", Map.of("coordinate", Map.of(
@@ -354,10 +350,7 @@ public class OtpItineraryService {
         return preferences.isEmpty() ? null : preferences;
     }
 
-    // ------------------------------------------------------------------
-    // Conversion raw -> DTO expose
-    // ------------------------------------------------------------------
-
+    
     private ItineraryOptionDTO toItineraryOptionDTO(OtpItineraryRawDTO raw) {
         List<LegDTO> legs = new ArrayList<>();
         if (raw.getLegs() != null) {
@@ -395,9 +388,7 @@ public class OtpItineraryService {
         double co2 = (raw.getEmissionsPerPerson() != null && raw.getEmissionsPerPerson().getCo2() != null)
                 ? raw.getEmissionsPerPerson().getCo2() : 0.0;
         if (co2 == 0.0) {
-            // OTP ne renvoie rien (GTFS sans facteurs d'emission configures) : on retombe
-            // sur une estimation distance x facteur/mode. Si l'itineraire est 100% WALK/BICYCLE,
-            // le fallback donne aussi 0.0, ce qui reste correct.
+           
             co2 = fallbackCo2Grams(legs);
         }
         double accessibility = raw.getAccessibilityScore() != null ? raw.getAccessibilityScore() : 0.0;
@@ -409,12 +400,11 @@ public class OtpItineraryService {
                 walkDistance,
                 co2,
                 accessibility,
-                null, // profileLabel rempli seulement pour les variantes velo (computeBicycleItineraries)
+                null, 
                 legs
         );
     }
 
-    /** Convertit un OffsetDateTime ISO-8601 (ex: "2026-09-01T14:30:00+02:00") en epoch millis. */
     private long parseEpochMillis(OtpLegTimeRawDTO legTime) {
         if (legTime == null || legTime.getScheduledTime() == null) {
             return 0L;
@@ -427,12 +417,7 @@ public class OtpItineraryService {
         }
     }
 
-    /**
-     * Estimation CO2 de secours : somme sur les legs de distance_km x facteur_g_par_km(mode).
-     * leg.getDistance() est en metres (meme convention que walkDistance cote OTP), d'ou la
-     * division par 1000. Un mode absent de CO2_FACTORS_G_PER_KM compte pour 0 (voir commentaire
-     * de la constante) plutot que de faire echouer le calcul.
-     */
+ 
     private double fallbackCo2Grams(List<LegDTO> legs) {
         if (legs == null || legs.isEmpty()) {
             return 0.0;
@@ -447,7 +432,6 @@ public class OtpItineraryService {
         return totalGrams;
     }
 
-    /** Signature grossiere pour dedoublonner les itineraires velo identiques entre 2 profils. */
     private String signatureOf(ItineraryOptionDTO option) {
         StringBuilder sb = new StringBuilder();
         sb.append(option.getDuration()).append('|');
@@ -459,10 +443,6 @@ public class OtpItineraryService {
         return sb.toString();
     }
 
-    /**
-     * Decode l'encoded polyline renvoye par OTP (Google Encoded Polyline Algorithm, precision 5).
-     * Voir : https://developers.google.com/maps/documentation/utilities/polylinealgorithm
-     */
     private List<GeoPointDTO> decodePolyline(String encoded) {
         List<GeoPointDTO> points = new ArrayList<>();
         if (encoded == null || encoded.isEmpty()) {

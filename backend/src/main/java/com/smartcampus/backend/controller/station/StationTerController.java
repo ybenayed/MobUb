@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
+// Controller pour la gestion des stations de train TER
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -23,15 +23,13 @@ public class StationTerController {
     private final StationTerService stationTerService;   // STATIQUE
     private final PassageTerService passageTerService;    // DYNAMIQUE
 
-    // ─── GROUPE 1 - Import / Admin
+    //Import 
 
     @PostMapping("/import")
     public ResponseEntity<Map<String, Integer>> importStations() {
         log.info(">> Import gares TER depuis API Navitia/SNCF");
         return ResponseEntity.ok(Map.of("imported", stationTerService.importStationsFromApi()));
     }
-
-    // ─── GROUPE 2 - API Front (lecture seule, statique, aucun appel Navitia)
 
     @GetMapping
     public ResponseEntity<List<StationTerDTO>> getAllStationsTer() {
@@ -43,11 +41,8 @@ public class StationTerController {
         return ResponseEntity.ok(stationTerService.getAllPositions());
     }
 
-    // ─── GROUPE 3 - Temps reel (dynamique, cache, jamais persiste)
+    //Temps reel (dynamique)
 
-    /**
-     * GET /api/stationTer/passages?navitiaId=stop_area:SNCF:87581009
-     */
     @GetMapping("/passages")
     public ResponseEntity<List<PassageTerDTO>> getNextPassages(@RequestParam String navitiaId) {
         return ResponseEntity.ok(passageTerService.getNextPassages(navitiaId));

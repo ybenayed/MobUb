@@ -8,6 +8,7 @@ import com.ObservatoireCampus.mobile.model.auth.LoginRequestDto
 import com.ObservatoireCampus.mobile.model.auth.RegisterRequestDto
 import com.ObservatoireCampus.mobile.model.auth.ResetPasswordRequestDto
 import com.ObservatoireCampus.mobile.repository.AuthRepository
+import com.ObservatoireCampus.mobile.repository.NationalityRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,15 +25,29 @@ sealed class AuthUiState {
 
 class AuthViewModel(
     private val authRepository: AuthRepository,
-    private val languageViewModel: LanguageViewModel
+    private val languageViewModel: LanguageViewModel,
+    private val nationalityRepository: NationalityRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
-    // AJOUT : etat global admin/user, lu au demarrage du ViewModel
     private val _isAdmin = MutableStateFlow(authRepository.isAdmin())
     val isAdmin: StateFlow<Boolean> = _isAdmin.asStateFlow()
+
+    private val _nationalities = MutableStateFlow<List<String>>(emptyList())
+    val nationalities: StateFlow<List<String>> = _nationalities.asStateFlow()
+
+    init {
+        loadNationalities()
+    }
+
+    fun loadNationalities() {
+        viewModelScope.launch {
+            nationalityRepository.getNationalities()
+                .onSuccess { list -> _nationalities.value = list }
+        }
+    }
 
     fun login(username: String, email: String, pass: String) {
         viewModelScope.launch {
@@ -101,12 +116,13 @@ class AuthViewModel(
 
 class AuthViewModelFactory(
     private val authRepository: AuthRepository,
-    private val languageViewModel: LanguageViewModel
+    private val languageViewModel: LanguageViewModel,
+    private val nationalityRepository: NationalityRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AuthViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return AuthViewModel(authRepository, languageViewModel) as T
+            return AuthViewModel(authRepository, languageViewModel, nationalityRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

@@ -106,7 +106,7 @@ public class WeatherLiveCacheService {
                 .isDay(currentNode.path("is_day").asInt(1))
                 .build();
 
-        // ─── Daily : toujours variante "jour" (resume global de la journee)
+        //  Daily : toujours variante "jour" (resume global de la journee)
         List<DailyWeatherDTO> allDaily = new ArrayList<>();
         JsonNode daily = root.path("daily");
         JsonNode dailyTime = daily.path("time");
@@ -132,7 +132,7 @@ public class WeatherLiveCacheService {
                 ? new ArrayList<>(allDaily.subList(PAST_DAYS, allDaily.size()))
                 : new ArrayList<>();
 
-        // ─── Hourly : 24h d'aujourd'hui, avec is_day reel heure par heure
+        //  Hourly : 24h d'aujourd'hui, avec is_day reel heure par heure
         List<HourlyPointDTO> hourlyToday = new ArrayList<>();
         JsonNode hourly = root.path("hourly");
         JsonNode hourlyTime = hourly.path("time");

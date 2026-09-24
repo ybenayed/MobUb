@@ -20,13 +20,12 @@ public class Parking {
     private String adresse;
     private String exploit;
 
-    // Utilisation de columnDefinition = "TEXT" car les descriptions peuvent dépasser 255 caractères
     @Column(columnDefinition = "TEXT")
     private String infor;      
 
     @Column(name = "ta_type")
     private String taType;
-    private String type;       // SURFACE / SILO / ENTERRE / MIXTE
+    private String type;    
 
     private Double latitude;
     private Double longitude;
@@ -34,7 +33,6 @@ public class Parking {
     @Column(columnDefinition = "geometry(Point,4326)")
     private Point location;
 
-    // --- Capacites (statique / declaratif) ---
     @Column(name = "np_total")
     private Integer npTotal;
     

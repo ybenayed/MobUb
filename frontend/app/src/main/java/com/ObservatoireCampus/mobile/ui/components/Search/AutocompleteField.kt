@@ -19,16 +19,6 @@ import androidx.compose.ui.unit.dp
 import com.ObservatoireCampus.mobile.model.search.SearchResultDto
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 
-/**
- * Champ de recherche + dropdown d'autocomplétion, générique.
- * Extrait de SearchBar.kt pour être réutilisé 3 fois :
- * - la recherche simple (barre du haut)
- * - le champ "origine" de l'itinéraire
- * - le champ "destination" de l'itinéraire
- *
- * trailingIcon est optionnel : utilisé uniquement par le champ origine
- * pour afficher le bouton "ma position" (🎯). Les autres l'omettent.
- */
 @Composable
 fun AutocompleteField(
     value: String,

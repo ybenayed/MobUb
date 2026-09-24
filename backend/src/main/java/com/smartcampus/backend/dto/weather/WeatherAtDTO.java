@@ -19,7 +19,7 @@ public class WeatherAtDTO {
     private Double precipitationSum;
     private Double windspeedMax;
 
-    // Point horaire demande (rempli seulement si "time" est fourni et disponible)
+    // Point horaire demandé
     private Double temperature;
     private Integer precipitationProbability;
 

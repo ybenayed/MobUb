@@ -12,11 +12,7 @@ import com.ObservatoireCampus.mobile.model.search.ItineraryOptionDto
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
-/**
- * Popup affichee au clic sur une proposition d'itineraire : heure de depart
- * (premier leg) et heure d'arrivee estimee (dernier leg), plus un bouton
- * pour visualiser le trace sur la carte.
- */
+
 @Composable
 fun ItineraryDetailsDialog(
     option: ItineraryOptionDto,

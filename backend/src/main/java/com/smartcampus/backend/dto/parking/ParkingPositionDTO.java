@@ -1,7 +1,7 @@
 package com.smartcampus.backend.dto.parking;
 
 import lombok.*;
-
+//dto pour la position d'un parking (id, ident, nom, taType, latitude, longitude)
 @Getter
 @Setter
 @NoArgsConstructor

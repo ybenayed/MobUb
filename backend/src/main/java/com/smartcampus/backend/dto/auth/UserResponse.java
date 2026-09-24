@@ -8,10 +8,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-/**
- * Ce qu'on renvoie au client apres login/consultation.
- * Ne contient JAMAIS le mot de passe, meme hashe.
- */
+// Ce qu'on renvoie au client apres login/consultation.
+// Ne contient JAMAIS le mot de passe, meme hashe.
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

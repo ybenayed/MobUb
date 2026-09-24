@@ -15,7 +15,6 @@ class MapRepository(private val context: Context) {
     private val legendCacheFile = File(context.filesDir, "legend_cache.json")
     private val gson = Gson()
 
-    // Fichier de cache spécifique par campus pour éviter le remplacement du cache global
     private fun getBatimentCacheFile(campusId: Long) = File(context.filesDir, "batiments_cache_$campusId.json")
 
     suspend fun getCampus(): List<CampusDto> {

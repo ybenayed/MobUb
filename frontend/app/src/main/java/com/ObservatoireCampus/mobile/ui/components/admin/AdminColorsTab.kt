@@ -289,7 +289,6 @@ private fun ColorFormSheet(
     }
 }
 
-/** Parse un hex "#RRGGBB", retombe sur gris si jamais la valeur stockee est invalide. */
 private fun parseColorSafe(hex: String): Color {
     return try {
         Color(android.graphics.Color.parseColor(hex))
@@ -297,7 +296,7 @@ private fun parseColorSafe(hex: String): Color {
         Color.Gray
     }
 }
-/** Palette fixe : l'admin choisit uniquement parmi ces couleurs, jamais de saisie libre. */
+/** Palette fixe : l'admin choisit uniquement parmi ces couleurs, ppas de saisie libre. */
 val INSTITUTION_COLOR_PALETTE = listOf(
     "#E53935", "#D81B60", "#8E24AA", "#5E35B1",
     "#3949AB", "#1E88E5", "#039BE5", "#00ACC1",

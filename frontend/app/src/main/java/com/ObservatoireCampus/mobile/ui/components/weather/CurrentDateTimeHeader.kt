@@ -18,8 +18,8 @@ import java.util.Locale
 
 @Composable
 fun CurrentDateTimeHeader(
-    languageViewModel: LanguageViewModel, // <-- AJOUT
-    currentLanguage: AppLanguage,          // <-- AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage,
     modifier: Modifier = Modifier
 ) {
     var now by remember { mutableStateOf(LocalDateTime.now()) }

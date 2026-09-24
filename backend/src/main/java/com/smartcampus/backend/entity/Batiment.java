@@ -18,11 +18,9 @@ public class Batiment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Nom du bâtiment (ex: "A1", "Résidence Pierre et Marie Curie"...)
     @Column(name = "nom", nullable = true)
     private String name;
 
-    // Institution / entité d'appartenance (ex: "Université de Bordeaux", "CNRS", "CROUS"...)
     @Column(name = "appartenance")
     private String appartenance;
 
@@ -41,8 +39,7 @@ public class Batiment {
     @JoinColumn(name = "campus_id")
     private Campus campus;
 
-    // Geometry générique : peut être un Polygon ou un MultiPolygon
-    // (bâtiment en plusieurs blocs)
+
     @Column(columnDefinition = "geometry(Geometry,4326)")
     private Geometry polygon;
 

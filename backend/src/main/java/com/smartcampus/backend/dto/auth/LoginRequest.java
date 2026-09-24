@@ -6,9 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * Correspond au screen de login cote mobile : username + email + password.
+ * Correspond au  de login : username + email + password.
  * On verifie que les trois correspondent bien au meme compte, pour un
- * niveau de securite un peu plus eleve qu'un simple couple identifiant/mdp.
  */
 @Data
 @NoArgsConstructor

@@ -157,8 +157,6 @@ fun LoginScreen(
         }
 
         // Formulaire (scrollable), centre verticalement dans l'ecran.
-        // Les espaces en haut (64 dp) et en bas (90 dp) evitent le selecteur
-        // de langue et la barre de logos fixe.
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -292,14 +290,9 @@ fun LoginScreen(
                 }
             }
 
-            // Espace reserve en bas pour que le formulaire ne soit jamais
-            // recouvert par la barre de logos fixe (voir plus bas dans le Box).
             Spacer(modifier = Modifier.height(90.dp))
         }
 
-        // Barre de logos "Chaire Mobilite" / "Bordeaux INP" : FIXE,
-        // ancree tout en bas de l'ecran, quel que soit le scroll du formulaire
-        // ou l'ouverture du clavier.
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)

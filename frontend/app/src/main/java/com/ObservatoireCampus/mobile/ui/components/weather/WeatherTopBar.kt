@@ -18,10 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusTextWhite
 
-/**
- * Barre du haut de l'ecran Meteo : retour vers la carte + titre "Météo".
- * Meme style que TopBar.kt (carte), mais fichier separe car ecran different.
- */
+
 @Composable
 fun WeatherTopBar(onBack: () -> Unit) {
     Row(

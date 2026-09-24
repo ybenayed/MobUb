@@ -17,18 +17,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FreeVehicleInfoService {
 
-    private final FreeVehiclePositionCacheService freeVehiclePositionCacheService; // seule source des vehicules
-    private final VehicleTypeFVRepository vehicleTypeFVRepository;                 // catalogue des TYPES (stable)
+    private final FreeVehiclePositionCacheService freeVehiclePositionCacheService; 
+    private final VehicleTypeFVRepository vehicleTypeFVRepository;                 
 
-    // ─── Detail d'un vehicule (fusion complete, 100% depuis le cache live)
 
     public FreeVehicleDTO getVehicleInfo(String bikeId) {
         JsonNode v = freeVehiclePositionCacheService.getRawVehicle(bikeId);
-        if (v == null) return null; // vehicule absent de la flotte live actuelle
+        if (v == null) return null; 
         return toDetailDTO(v);
     }
 
-    // ─── Liste complete / filtree, elle aussi 100% dynamique
+    // filtree, elle aussi 100% dynamique
 
     public List<FreeVehicleDTO> getAllVehicles() {
         return freeVehiclePositionCacheService.getAllRawVehicles().stream()
@@ -43,7 +42,7 @@ public class FreeVehicleInfoService {
                 .toList();
     }
 
-    // ─── Comptage par type, calcule depuis le cache live + noms depuis le catalogue des types
+    // Comptage par type, calcule depuis le cache live + noms depuis le catalogue des types
 
     public List<VehicleTypeCountDTO> getVehicleCountByType() {
         Map<String, Long> countsByType = new HashMap<>();
@@ -65,7 +64,6 @@ public class FreeVehicleInfoService {
                 .toList();
     }
 
-    // ─── Mapping commun JSON live -> DTO riche
 
     private FreeVehicleDTO toDetailDTO(JsonNode v) {
         JsonNode rentalUris = v.path("rental_uris");
@@ -89,7 +87,6 @@ public class FreeVehicleInfoService {
                 .build();
     }
 
-    // is_reserved / is_disabled peuvent arriver en boolean ou en 0/1 selon les providers
     private Boolean asBooleanOrNull(JsonNode node) {
         if (node == null || node.isMissingNode() || node.isNull()) return null;
         if (node.isBoolean()) return node.asBoolean();

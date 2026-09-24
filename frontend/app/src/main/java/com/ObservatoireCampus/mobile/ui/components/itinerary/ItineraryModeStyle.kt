@@ -29,12 +29,6 @@ object ItineraryModeStyle {
         else -> "➡️"
     }
 
-    /**
-     * Variante qui distingue vélo perso (🚲) et Vcub/libre-service (🛴) alors
-     * qu'OTP renvoie le même mode "BICYCLE" pour les deux (voir LegDTO.rentedBike
-     * côté backend). A utiliser à la place de emoji(leg.mode) partout où on
-     * affiche un LegDto complet.
-     */
     fun emojiForLeg(leg: LegDto): String =
         if (leg.mode.equals("BICYCLE", ignoreCase = true) && leg.rentedBike) "🛴" else emoji(leg.mode)
 }

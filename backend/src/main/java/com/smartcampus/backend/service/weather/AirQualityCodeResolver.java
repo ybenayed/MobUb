@@ -7,8 +7,6 @@ public class AirQualityCodeResolver {
     private static final AirQualityInfo UNKNOWN =
             new AirQualityInfo("Inconnu", "Donnee indisponible", "⚪");
 
-    // Seuils de l'indice europeen (european_aqi), 0 a 100+
-    // Reference : echelle commune europeenne de qualite de l'air (EEA)
     public static AirQualityInfo resolve(Integer europeanAqi) {
         if (europeanAqi == null) return UNKNOWN;
 

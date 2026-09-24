@@ -5,7 +5,7 @@ import com.smartcampus.backend.service.admin.DashboardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+// Controller pour le dashboard admin, qui fournit des statistiques sur l'application
 @RestController
 @RequestMapping("/api/admin/dashboard")
 @RequiredArgsConstructor

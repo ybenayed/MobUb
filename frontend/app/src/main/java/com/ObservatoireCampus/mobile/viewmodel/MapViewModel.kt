@@ -33,7 +33,6 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     private val _legendList = MutableStateFlow<List<InstitutionColorDto>>(emptyList())
     val legendList: StateFlow<List<InstitutionColorDto>> = _legendList
 
-    // Deux sources d'erreur, regroupees en une seule (sans doublon) pour le bandeau
     private val _campusError = MutableStateFlow<String?>(null)
     private val _legendError = MutableStateFlow<String?>(null)
 

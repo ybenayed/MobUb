@@ -12,11 +12,6 @@ import com.ObservatoireCampus.mobile.ui.components.itinerary.filters.ModeFilterR
 import com.ObservatoireCampus.mobile.ui.components.itinerary.filters.SortFilterMenu
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
-/**
- * Assemble les filtres : ModeFilterRow, ItineraryTimeFilter, SortFilterMenu.
- * Le filtre PMR (WheelchairFilterChip) a ete retire, ainsi que le message
- * d'avertissement associe.
- */
 @Composable
 fun ItineraryFiltersBar(
     filters: ItineraryFilters,

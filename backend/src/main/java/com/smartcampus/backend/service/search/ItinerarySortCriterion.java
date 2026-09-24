@@ -6,7 +6,7 @@ import java.util.Comparator;
 
 /**
  * Un critere par endpoint de tri (/fastest, /least-walking, /fewest-transfers,
- * /eco, /accessible). Centralise ici pour que le service et le controller
+ * /eco, ). Centralise ici pour que le service et le controller
  * partagent la meme logique de comparaison.
  */
 public enum ItinerarySortCriterion {
@@ -20,7 +20,6 @@ public enum ItinerarySortCriterion {
 
     ECO_FRIENDLY(Comparator.comparingDouble(ItineraryOptionDTO::getCo2Grams)),
 
-    /** Score OTP natif (0=non accessible, 1=accessible) : on veut le plus haut d'abord. */
     ACCESSIBILITY(Comparator.comparingDouble(ItineraryOptionDTO::getAccessibilityScore).reversed()
             .thenComparingLong(ItineraryOptionDTO::getDuration));
 

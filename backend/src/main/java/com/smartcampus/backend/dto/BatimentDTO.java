@@ -4,7 +4,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-
+// Partie statique  des batiments 
 @Getter
 @Setter
 @Builder
@@ -20,7 +20,6 @@ public class BatimentDTO {
     private Double centerLng;
     private Double perimeterMeters;
     private Long campusId;
-    // Liste de parties (voir CampusDTO) : la plupart des bâtiments ont une seule partie
     private List<List<double[]>> polygonCoordinates;
     private LocalDateTime importedAt;
 }

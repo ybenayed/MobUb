@@ -37,8 +37,6 @@ public class AirQualityLiveCacheService {
     private static final String AIR_QUALITY_URL = "https://air-quality-api.open-meteo.com/v1/air-quality";
 
     private static final int PAST_DAYS = 7;
-    // NB : l'API air-quality limite forecast_days a 7 maximum (contrairement a l'API meteo qui va jusqu'a 16).
-    // forecast_days=7 renvoie donc aujourd'hui + 6 jours a venir (7 valeurs au total, pas 8).
     private static final int FORECAST_DAYS = 7;
 
     private final AtomicReference<AirQualitySummaryDTO> cache = new AtomicReference<>();

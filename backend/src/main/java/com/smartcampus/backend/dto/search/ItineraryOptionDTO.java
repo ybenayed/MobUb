@@ -7,7 +7,7 @@ public class ItineraryOptionDTO {
     private Integer transfers;
     private Double walkDistance;
     private Double co2Grams;
-    private Double accessibilityScore; // Déjà en Double, mais vérifie les autres
+    private Double accessibilityScore; 
     private String profileLabel;
     private List<LegDTO> legs;
 

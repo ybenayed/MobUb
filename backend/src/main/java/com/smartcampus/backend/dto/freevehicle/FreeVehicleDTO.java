@@ -4,7 +4,7 @@ import lombok.*;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
 public class FreeVehicleDTO {
-    // ─── statique (BDD)
+    // statique 
     private String bikeId;
     private String vehicleTypeId;
     private Boolean isReserved;
@@ -14,7 +14,7 @@ public class FreeVehicleDTO {
     private String pricingPlanId;
     private Integer currentRangeMeters;
 
-    // ─── dynamique (API live)
+    // dynamique 
     private Double latitude;
     private Double longitude;
     private String lastReported;

@@ -15,20 +15,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Endpoint UNIQUE d'import : supprime tout (bâtiments, campus, couleurs) et
- * réimporte depuis les fichiers locaux (Campus.json + institution_colors.json),
- * dans le bon ordre. Toujours "force" : pas de garde idempotente qui pourrait
- * laisser des données incomplètes en base.
- *
- * Remplace les anciens POST /api/campus/import/local et
- * POST /api/batiments/import/local (retirés des autres contrôleurs).
- */
+// Endpoint UNIQUE d'import : (bâtiments, campus, couleurs) 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/import")
-@CrossOrigin(origins = "*") // à restreindre en prod
+@CrossOrigin(origins = "*") 
 public class ImportController {
 
     private final CampusService campusService;
@@ -36,12 +28,9 @@ public class ImportController {
     private final InstitutionColorService institutionColorService;
 
     /**
-     * POST /api/import/local
      * Ordre obligatoire :
-     * 1. supprime les bâtiments (ils référencent le campus par FK)
-     * 2. supprime puis réimporte le campus
-     * 3. réimporte les couleurs d'institution
-     * 4. réimporte les bâtiments (en utilisant le nouveau campus + les couleurs)
+     * 1. importe les couleurs d'institution
+     * 2. importe les bâtiments (en utilisant le campus + les couleurs)
      */
     @PostMapping("/local")
     @Transactional

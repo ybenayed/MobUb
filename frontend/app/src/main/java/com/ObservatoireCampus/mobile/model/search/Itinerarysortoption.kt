@@ -3,8 +3,6 @@ package com.ObservatoireCampus.mobile.model.search
 
 /**
  * Tri appliqué CÔTÉ CLIENT sur les résultats déjà reçus du backend.
- * ACCESSIBILITY retire avec le PMR : n'avait de sens qu'avec l'endpoint
- * /accessible, qui n'est plus appele depuis l'app.
  */
 enum class ItinerarySortOption(val label: String) {
     DURATION("Le plus rapide"),

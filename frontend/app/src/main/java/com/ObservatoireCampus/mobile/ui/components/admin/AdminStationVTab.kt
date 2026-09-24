@@ -221,12 +221,12 @@ private fun StationVCard(
 private fun StationVFormSheet(
     strings: InfraStrings,
     existing: AdminStationVDto?,
-    nextAutoStationId: String,   // AJOUT : calcule par l'appelant
+    nextAutoStationId: String,
     isSaving: Boolean,
     onDismiss: () -> Unit,
     onSubmit: (AdminStationVRequestDto) -> Unit
 ) {
-    val stationId = existing?.stationId ?: nextAutoStationId   // AJOUT : plus de champ modifiable
+    val stationId = existing?.stationId ?: nextAutoStationId
     var nom by remember { mutableStateOf(existing?.nom ?: "") }
     var adresse by remember { mutableStateOf(existing?.adresse ?: "") }
     var capacite by remember { mutableStateOf(existing?.capacite?.toString() ?: "") }
@@ -234,7 +234,7 @@ private fun StationVFormSheet(
     var longitude by remember { mutableStateOf(existing?.longitude?.toString() ?: "") }
 
     val isEditMode = existing != null
-    val canSubmit = nom.isNotBlank()   // stationId n'est plus une condition utilisateur
+    val canSubmit = nom.isNotBlank()
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -251,7 +251,6 @@ private fun StationVFormSheet(
                 color = ObcampusPrimary
             )
 
-            // AJOUT : affichage informatif seul, jamais modifiable par l'utilisateur
             Text(
                 text = "${strings.fieldStationId} : $stationId",
                 style = MaterialTheme.typography.bodySmall,
@@ -315,7 +314,7 @@ private fun StationVFormSheet(
                     onClick = {
                         onSubmit(
                             AdminStationVRequestDto(
-                                stationId = stationId,   // valeur calculee, jamais saisie
+                                stationId = stationId,
                                 nom = nom.ifBlank { null },
                                 adresse = adresse.ifBlank { null },
                                 capacite = capacite.toIntOrNull(),

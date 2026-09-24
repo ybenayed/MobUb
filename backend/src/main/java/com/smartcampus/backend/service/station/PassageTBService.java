@@ -35,7 +35,6 @@ public class PassageTBService {
     private static final ZoneId BORDEAUX_ZONE = ZoneId.of("Europe/Paris");
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
-    // Duree de vie du cache par arret
     private static final long CACHE_TTL_SECONDS = 20;
 
     private final ConcurrentHashMap<String, CacheEntry> cache = new ConcurrentHashMap<>();
@@ -116,8 +115,8 @@ public class PassageTBService {
     }
 
     /**
-     * Convertit une chaîne ISO-8601 UTC (ex: "2026-09-08T14:30:00Z")
-     * vers l'heure locale de Bordeaux au format "HH:mm" (ex: "16:30").
+     * Convertit une chaîne ISO-8601 UTC 
+     * vers l'heure locale de Bordeaux au format "HH:mm" 
      */
     private String formatToBordeauxTime(String isoUtcString) {
         if (isoUtcString == null || isoUtcString.isBlank()) {

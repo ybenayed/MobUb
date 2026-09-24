@@ -9,10 +9,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-/**
- * Cree le compte admin au demarrage s'il n'existe pas encore.
- * Idempotent : ne fait rien si un utilisateur avec ce username OU cet email existe deja.
- */
+// Creation du compte admin si il n'existe pas deja (automatiquement cree a la premiere execution de l'application)
 @Slf4j
 @Component
 @RequiredArgsConstructor

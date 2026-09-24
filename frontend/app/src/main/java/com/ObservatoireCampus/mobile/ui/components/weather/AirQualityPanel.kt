@@ -28,7 +28,7 @@ import com.ObservatoireCampus.mobile.viewmodel.AppLanguage
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
 private data class PollutantInfo(
-    val id: String, // Identification pour traduction
+    val id: String,
     val label: String,
     val icon: String,
     val unit: String,
@@ -72,8 +72,8 @@ fun AirQualityPanel(
     dailyData: AirQualityAtDto?,
     hourData: AirQualityAtDto?,
     showHourly: Boolean,
-    languageViewModel: LanguageViewModel, // <-- AJOUT
-    currentLanguage: AppLanguage,          // <-- AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage,
     modifier: Modifier = Modifier
 ) {
     val data = if (showHourly) hourData else dailyData

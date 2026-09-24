@@ -18,20 +18,9 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
-// Coordonnees fixes du campus (memes que le cache backend cote Spring).
-// Utilisees en fallback si la position de l'utilisateur est indisponible.
 private const val CAMPUS_LAT = 44.808
 private const val CAMPUS_LON = -0.595
 
-/**
- * Etat + logique de l'ecran Meteo :
- * - selectedDate / selectedHourIndex : ce que l'utilisateur consulte (fleches jour/heure)
- * - hourlyPoints : 24 points (icone + temperature) pour la date selectionnee -> alimente la courbe
- * - airQualityDaily : moyenne du jour (affichee par defaut)
- * - airQualityHour : valeurs de l'heure cliquee (affichees des qu'une heure est selectionnee)
- * - locationWarning : non-null si la position utilisateur n'a pas pu etre utilisee
- *   (position introuvable / refusee) -> l'ecran retombe alors sur les coordonnees du campus.
- */
 class WeatherViewModel(
     private val weatherRepository: WeatherRepository,
     private val airQualityRepository: AirQualityRepository

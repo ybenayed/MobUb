@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+// Controller pour la gestion des legendes (couleurs des institutions et types de vehicules) par l'admin
 @RestController
 @RequestMapping("/api/admin/legends")
 @RequiredArgsConstructor

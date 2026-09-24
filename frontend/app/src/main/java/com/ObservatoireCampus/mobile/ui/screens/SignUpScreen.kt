@@ -29,6 +29,7 @@ import  androidx.compose.ui.zIndex
 import androidx.compose.ui.viewinterop.AndroidView
 import com.ObservatoireCampus.mobile.ui.components.LanguageSelector
 import com.ObservatoireCampus.mobile.ui.components.MobUbLogo
+import com.ObservatoireCampus.mobile.ui.components.NationalityDropdownField
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.ui.theme.WaypusInputBorder
 import com.ObservatoireCampus.mobile.ui.theme.WaypusTextDark
@@ -98,7 +99,8 @@ fun SignUpScreen(
     onSignUpClick: (SignUpFormData) -> Unit,
     onNavigateBackToLogin: () -> Unit,
     isLoading: Boolean = false,
-    errorMessage: String? = null
+    errorMessage: String? = null,
+    nationalities: List<String> = emptyList()
 ) {
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -169,15 +171,13 @@ fun SignUpScreen(
                 .background(Color.Black.copy(alpha = 0.10f))
         )
 
-        // Barre d'en-tête (Retour + Sélecteur de langue)
-        // Barre d'en-tête (Retour + Sélecteur de langue)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .statusBarsPadding()
                 .padding(horizontal = 12.dp, vertical = 8.dp)
                 .align(Alignment.TopCenter)
-                .zIndex(100f), // <--- AJOUTE CECI pour débloquer les clics sur l'en-tête
+                .zIndex(100f), //
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -257,12 +257,12 @@ fun SignUpScreen(
                 )
                 Spacer(modifier = Modifier.height(14.dp))
 
-                OutlinedTextField(
+                NationalityDropdownField(
                     value = nationality,
                     onValueChange = { nationality = it },
-                    label = { Text(strings.nationality) },
-                    singleLine = true,
+                    label = strings.nationality,
                     modifier = Modifier.fillMaxWidth(),
+                    options = nationalities,
                     colors = waypusFieldColors(),
                     shape = RoundedCornerShape(10.dp)
                 )

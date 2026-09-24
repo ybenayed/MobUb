@@ -31,7 +31,6 @@ public class InstitutionColorService {
     private static final String DEFAULT_COLOR = "#EAF0D8";
     private static final String RESOURCE_PATH = "data/institution_colors.json";
 
-    /** Importe institution_colors.json vers la base, une seule fois si la table est vide. */
     public void importFromLocalFileIfEmpty() {
         if (institutionColorRepository.count() > 0) {
             return;
@@ -39,10 +38,7 @@ public class InstitutionColorService {
         doImport();
     }
 
-    /**
-     * Vide la table puis réimporte depuis institution_colors.json.
-     * Utilisé par ImportController (endpoint unique "tout réimporter").
-     */
+   
     public void resetAndImportFromLocalFile() {
         long count = institutionColorRepository.count();
         institutionColorRepository.deleteAll();
@@ -63,7 +59,6 @@ public class InstitutionColorService {
         }
     }
 
-    /** Table institution -> couleur, utilisée par BatimentService pendant l'import des bâtiments. */
     public Map<String, String> getColorMap() {
         return institutionColorRepository.findAll().stream()
                 .collect(Collectors.toMap(InstitutionColor::getInstitution, InstitutionColor::getColor));

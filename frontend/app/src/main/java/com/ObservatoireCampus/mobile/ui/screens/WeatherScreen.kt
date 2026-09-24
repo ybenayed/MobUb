@@ -22,7 +22,7 @@ import com.ObservatoireCampus.mobile.viewmodel.weather.WeatherViewModelFactory
 
 @Composable
 fun WeatherScreen(
-    languageViewModel: LanguageViewModel, // ViewModel de langue pour la gestion du multilingue
+    languageViewModel: LanguageViewModel,
     onBack: () -> Unit,
     userLat: Double? = null,
     userLon: Double? = null,
@@ -40,10 +40,8 @@ fun WeatherScreen(
     val error by viewModel.error.collectAsState()
     val locationWarning by viewModel.locationWarning.collectAsState()
 
-    // Suivi en temps réel de la langue sélectionnée
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
 
-    // Traduction dynamique des avertissements et erreurs
     var translatedLocationWarning by remember { mutableStateOf<String?>(null) }
     var translatedError by remember { mutableStateOf<String?>(null) }
 
@@ -51,7 +49,6 @@ fun WeatherScreen(
         viewModel.loadInitial(userLat = userLat, userLon = userLon)
     }
 
-    // Traduction automatique dès que l'état change
     LaunchedEffect(currentLanguage, locationWarning, error) {
         translatedLocationWarning = locationWarning?.let { languageViewModel.translate(it) }
         translatedError = error?.let { languageViewModel.translate(it) }
@@ -61,7 +58,6 @@ fun WeatherScreen(
 
     Column(modifier = Modifier.fillMaxSize()) {
 
-        // TopBar connectée au ViewModel multilingue
         TopBar(
             languageViewModel = languageViewModel,
             onMenuClick = onBack,

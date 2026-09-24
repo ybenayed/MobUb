@@ -6,12 +6,8 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * Cache memoire simple, cle = ident du parking.
- * Suffisant en mono-instance. Si l'appli scale horizontalement,
- * remplacer par Redis pour que toutes les instances partagent
- * la meme donnee fraiche.
- */
+//Cache memoire simple, cle = ident du parking.
+
 @Component
 public class ParkingRealtimeCache {
 

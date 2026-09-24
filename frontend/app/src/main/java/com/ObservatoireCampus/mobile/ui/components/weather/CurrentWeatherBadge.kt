@@ -26,11 +26,6 @@ import coil.compose.AsyncImage
 import com.ObservatoireCampus.mobile.model.weather.CurrentWeatherDto
 import com.ObservatoireCampus.mobile.repository.weather.WeatherRepository
 
-/**
- * Badge (icone + temperature) en bas a gauche de la carte (MapScreen).
- * Totalement autonome : charge lui-meme /api/weather/current, pas besoin
- * de brancher un ViewModel externe. Un clic ouvre l'ecran Meteo complet.
- */
 @Composable
 fun CurrentWeatherBadge(
     onClick: () -> Unit,

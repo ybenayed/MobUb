@@ -53,7 +53,6 @@ fun StationVBubble(
     var textHeureAbbrev by remember { mutableStateOf("h") }
     var textSecondesAbbrev by remember { mutableStateOf("s") }
 
-    // Gestion des traductions réactives
     LaunchedEffect(detail, currentLanguage) {
         textHeaderLabel = languageViewModel.translate("STATION VÉLO")
         textStatutLabel = languageViewModel.translate("Statut")

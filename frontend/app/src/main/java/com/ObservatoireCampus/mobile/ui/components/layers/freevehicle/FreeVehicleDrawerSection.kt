@@ -5,8 +5,8 @@ import androidx.compose.material.icons.filled.ElectricScooter
 import androidx.compose.runtime.*
 import com.ObservatoireCampus.mobile.model.layers.LayerItemUiState
 import com.ObservatoireCampus.mobile.ui.components.layers.LayerSection
-import com.ObservatoireCampus.mobile.viewmodel.AppLanguage // AJOUT
-import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel // AJOUT
+import com.ObservatoireCampus.mobile.viewmodel.AppLanguage
+import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel 
 
 @Composable
 fun FreeVehicleDrawerSection(
@@ -16,8 +16,8 @@ fun FreeVehicleDrawerSection(
     onExpandToggle: () -> Unit,
     onMasterToggle: () -> Unit,
     onItemToggle: (String) -> Unit,
-    languageViewModel: LanguageViewModel, // AJOUT
-    currentLanguage: AppLanguage           // AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage
 ) {
     var translatedTitle by remember { mutableStateOf("Libre-service") }
     var translatedItemLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }

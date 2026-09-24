@@ -3,11 +3,6 @@ package com.smartcampus.backend.dto.search;
 import java.util.List;
 import lombok.*;
 
-/**
- * numItineraries a ete retire : le backend decide seul du nombre de propositions
- * a demander a OTP (voir OtpItineraryService.MAX_ITINERARIES_REQUESTED) et renvoie
- * systematiquement toutes les options trouvees, quel que soit l'endpoint appele.
- */
 @Getter
 @Setter
 public class ItineraryRequestDTO {
@@ -15,13 +10,13 @@ public class ItineraryRequestDTO {
     private SearchResultDTO origin;
     private SearchResultDTO destination;
 
-    private List<String> modes;          // ex: ["WALK","BICYCLE_RENT","TRANSIT"]
-    private String date;                 // format "yyyy-MM-dd", ex: "2026-08-26"
-    private String time;                 // format "HH:mm", ex: "14:30"
-    private Boolean arriveBy;            // true = "je veux arriver a" / false = "je pars a"
-    private Double walkSpeed;            // m/s, ex: 1.3
-    private Double bikeSpeed;            // m/s, ex: 4.0
-    private Boolean wheelchair;          // accessibilite PMR
+    private List<String> modes;          
+    private String date;                
+    private String time;                 
+    private Boolean arriveBy;            
+    private Double walkSpeed;            
+    private Double bikeSpeed;            
+    private Boolean wheelchair;         
 
     public ItineraryRequestDTO() {
     }

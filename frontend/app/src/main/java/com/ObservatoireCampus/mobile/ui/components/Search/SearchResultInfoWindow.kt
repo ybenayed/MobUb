@@ -11,13 +11,6 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.infowindow.InfoWindow
 
-/**
- * Bulle affichée directement au-dessus du marqueur de recherche (comme sur Google Maps),
- * au lieu du popup gris par défaut d'osmdroid.
- * - Clic sur le marqueur -> s'affiche
- * - Reclic sur le marqueur, ou clic ailleurs sur la carte -> disparaît
- *   (le "clic ailleurs" est géré par le MapEventsOverlay ajouté dans CampusMap.kt)
- */
 class SearchResultInfoWindow(mapView: MapView) : InfoWindow(buildView(mapView), mapView) {
 
     private val titleView: TextView = (mView as LinearLayout).getChildAt(0) as TextView
@@ -36,7 +29,6 @@ class SearchResultInfoWindow(mapView: MapView) : InfoWindow(buildView(mapView), 
     }
 
     override fun onClose() {
-        // Rien à nettoyer : la vue est recréée à chaque ouverture via onOpen()
     }
 
     companion object {
@@ -44,12 +36,10 @@ class SearchResultInfoWindow(mapView: MapView) : InfoWindow(buildView(mapView), 
             val context = mapView.context
             val density = context.resources.displayMetrics.density
 
-            // Renommé "bubbleBackground" (pas "background") pour éviter le conflit avec
-            // la propriété View.background lors de l'apply{} ci-dessous.
             val bubbleBackground = GradientDrawable().apply {
                 setColor(Color.WHITE)
                 cornerRadius = 14f * density
-                setStroke((1.5f * density).toInt(), Color.parseColor("#DC2626")) // rouge, cohérent avec le pin
+                setStroke((1.5f * density).toInt(), Color.parseColor("#DC2626"))
             }
 
             val container = LinearLayout(context).apply {

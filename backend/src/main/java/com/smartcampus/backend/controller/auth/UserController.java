@@ -13,8 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 /**
- * CRUD utilisateurs. Toutes les routes sont protegees (JWT requis),
- * conformement a la config dans SecurityConfig (anyRequest().authenticated()).
+ * CRUD utilisateurs. Toutes les routes sont protegees ,
  */
 @RestController
 @RequestMapping("/api/users")

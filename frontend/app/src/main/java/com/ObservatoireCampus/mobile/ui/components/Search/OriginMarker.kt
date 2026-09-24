@@ -8,11 +8,6 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.drawable.BitmapDrawable
 
-/**
- * Icône "pin" bleue pour marquer le point de départ (origine) d'un itinéraire.
- * Même forme que SearchMarker.kt (rouge, destination), pour que les deux
- * marqueurs se lisent comme une paire cohérente sur la carte.
- */
 fun createOriginMarkerIcon(context: Context): BitmapDrawable {
     val widthDp = 36
     val heightDp = 46
@@ -28,8 +23,7 @@ fun createOriginMarkerIcon(context: Context): BitmapDrawable {
     val headCenterY = headRadius + (heightPx * 0.02f)
     val tipY = heightPx.toFloat() - (heightPx * 0.02f)
 
-    val blue = Color.rgb(25, 118, 210) // même bleu que UserLocationMarker.kt
-
+    val blue = Color.rgb(25, 118, 210)
     val pinPath = Path().apply {
         moveTo(centerX, tipY)
         lineTo(centerX - headRadius * 0.72f, headCenterY + headRadius * 0.55f)

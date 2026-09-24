@@ -23,7 +23,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ObservatoireCampus.mobile.R // Assurez-vous d'importer le package R de votre projet
+import com.ObservatoireCampus.mobile.R
+
 import com.ObservatoireCampus.mobile.ui.components.TopBar
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusBackground
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
@@ -35,7 +36,6 @@ fun InternshipScreen(
     languageViewModel: LanguageViewModel,
     onBack: () -> Unit
 ) {
-    // ---- TRADUCTIONS DYNAMIQUES AVEC LE LANGUAGE VIEWMODEL ----
     var titleText by remember { mutableStateOf("À propos") }
     var personalInfoTitle by remember { mutableStateOf("Informations Personnelles") }
     var nameLabel by remember { mutableStateOf("Nom & Prénom") }
@@ -49,7 +49,6 @@ fun InternshipScreen(
     var supervisorsLabel by remember { mutableStateOf("Encadrant") }
     var durationLabel by remember { mutableStateOf("Durée") }
 
-    // Traduction des valeurs nominatives et textuelles statiques
     var translatedName by remember { mutableStateOf("Ben Ayed Yasmine") }
     var translatedSchool by remember { mutableStateOf("ENSEIRB-MATMECA (Bordeaux)") }
     var translatedLevel by remember { mutableStateOf("2ème année - Cycle d'Ingénieur") }
@@ -58,7 +57,6 @@ fun InternshipScreen(
     var supervisor1 by remember { mutableStateOf("M. Mohamed Mosbah") }
     var supervisor2 by remember { mutableStateOf("M. Royston Fernandes") }
 
-    // Textes du sujet de stage nettoyés et prêts à être traduits
     val originalDescription = "Le campus de l'université de Bordeaux est l'un des plus vastes d'Europe (187 hectares, 58 000 usagers quotidiens). Pour répondre aux enjeux de fluidité et de monitoring en temps réel, la Chaire Mobilité et Transports Intelligents a initié l'outil « Observatoire Mobilité de Bordeaux Université ». L'objectif est de porter cet outil sur mobile pour offrir une expérience interactive et géolocalisée aux usagers."
     var translatedDescription by remember { mutableStateOf(originalDescription) }
 
@@ -86,7 +84,6 @@ fun InternshipScreen(
         supervisorsLabel = languageViewModel.translate("Encadrant")
         durationLabel = languageViewModel.translate("Durée")
 
-        // Traduction des valeurs
         translatedName = languageViewModel.translate("Ben Ayed Yasmine")
         translatedSchool = languageViewModel.translate("ENSEIRB-MATMECA (Bordeaux)")
         translatedLevel = languageViewModel.translate("2ème année - Cycle d'Ingénieur")
@@ -141,9 +138,8 @@ fun InternshipScreen(
                         .background(Color.White),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Remplacement du placeholder par votre image importée dans drawable
                     Image(
-                        painter = painterResource(id = R.drawable.yasmine), // Votre photo mise dans res/drawable
+                        painter = painterResource(id = R.drawable.yasmine),
                         contentDescription = "Photo de Yasmine",
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
@@ -254,7 +250,6 @@ fun InternshipScreen(
 
                     Spacer(modifier = Modifier.height(20.dp))
 
-                    // Encadrants séparés sur 2 lignes distinctes avec M.
                     InfoRow(label = supervisorsLabel, value = supervisor1)
                     InfoRow(label = supervisorsLabel, value = supervisor2)
 

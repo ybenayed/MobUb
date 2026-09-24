@@ -36,7 +36,6 @@ public class StationVService {
         "https://bdx.mecatran.com/utw/ws/gbfs/bordeaux/v3/station_information.json" +
         "?apiKey=opendata-bordeaux-metropole-flux-gtfs-rt";
 
-    // ─── LECTURE
 
     public List<StationVDTO> getAllStations() {
         return stationVRepository.findAll().stream().map(stationVMapper::toDTO).toList();
@@ -50,7 +49,6 @@ public class StationVService {
         return stationVRepository.findByStationId(stationId);
     }
 
-    // ─── IMPORT DEPUIS L'API (idempotent)
 
     public int importStationsFromApi() {
         int imported = 0;
@@ -63,7 +61,7 @@ public class StationVService {
             for (JsonNode station : stations) {
                 String stationId = station.path("station_id").asText(null);
                 if (stationId == null || stationVRepository.existsByStationId(stationId)) {
-                    continue; // idempotent
+                    continue; 
                 }
 
                 stationVRepository.save(buildStationFromRecord(station));

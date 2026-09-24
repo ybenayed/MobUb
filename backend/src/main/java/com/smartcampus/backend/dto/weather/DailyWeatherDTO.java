@@ -10,8 +10,8 @@ public class DailyWeatherDTO {
     private Double temperatureMax;
     private Double temperatureMin;
     private Integer weathercode;
-    private String description; // NOUVEAU - toujours variante "jour" (resume de la journee)
-    private String icon;        // NOUVEAU
+    private String description; 
+    private String icon;       
     private Double precipitationSum;
     private Double windspeedMax;
 }

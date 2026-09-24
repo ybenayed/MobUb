@@ -12,7 +12,6 @@ import java.util.List;
 /**
  * Une recherche d'itineraire sauvegardee par un utilisateur.
  * Correspond a un ItineraryOptionDTO "choisi" par le client parmi les options
- * renvoyees par OtpItineraryService, enrichi de l'origine/destination.
  */
 @Entity
 @Table(name = "search_history")
@@ -47,14 +46,12 @@ public class SearchHistory {
     })
     private PlaceRef destination;
 
-    /** Heure de depart / arrivee prevues, derivees du premier / dernier leg. */
     @Column(name = "departure_time")
     private LocalDateTime departureTime;
 
     @Column(name = "arrival_time")
     private LocalDateTime arrivalTime;
 
-    /** Duree totale en secondes (Itinerary.duration cote OTP). */
     @Column(nullable = false)
     private long duration;
 
@@ -70,7 +67,6 @@ public class SearchHistory {
     @Column(name = "co2_grams")
     private Double co2Grams;
 
-    /** Label du profil velo si applicable (voir ItineraryOptionDTO.profileLabel), sinon null. */
     @Column(name = "profile_label")
     private String profileLabel;
 
@@ -83,7 +79,6 @@ public class SearchHistory {
     @OrderBy("sequenceOrder ASC")
     private List<SearchHistoryLeg> legs = new ArrayList<>();
 
-    /** Helper pour garder la relation bidirectionnelle coherente lors de la construction. */
     public void addLeg(SearchHistoryLeg leg) {
         legs.add(leg);
         leg.setSearchHistory(this);

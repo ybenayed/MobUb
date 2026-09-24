@@ -2,9 +2,6 @@ package com.ObservatoireCampus.mobile.model.weather
 
 /**
  * Reponse de /api/air-quality/at.
- * Si "time" n'a pas ete envoye dans la requete : seuls les champs *Avg sont remplis
- * (moyenne du jour). Si "time" a ete envoye : pm2_5/pm10/ozone/nitrogenDioxide et
- * europeanAqi/category/description/icon refletent l'heure precise.
  */
 data class AirQualityAtDto(
     val latitude: Double?,

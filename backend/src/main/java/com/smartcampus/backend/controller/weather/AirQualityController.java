@@ -19,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-
+// Controller pour la gestion de la qualité de l'air
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/air-quality")

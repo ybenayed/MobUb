@@ -23,12 +23,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 
-/**
- * Partie STATIQUE : positions des gares TER autour de Bordeaux.
- * Ces donnees ne changent quasiment jamais -> on les importe UNE FOIS en base
- * via /import (idempotent), et le front lit ensuite en base (pas d'appel
- * Navitia a chaque chargement de carte).
- */
+// Partie STATIQUE : positions des gares TER autour de Bordeaux.
 @Slf4j
 @Service
 public class StationTerService {
@@ -76,7 +71,7 @@ public class StationTerService {
         return stationTerRepository.findAllPositions();
     }
 
-    // ─── IMPORT DEPUIS NAVITIA (idempotent, a lancer manuellement/rarement)
+    //IMPORT DEPUIS NAVITIA (idempotent, a lancer manuellement/rarement)
 
     public int importStationsFromApi() {
         String url = UriComponentsBuilder.fromUriString(PLACES_NEARBY_TEMPLATE)
@@ -101,7 +96,7 @@ public class StationTerService {
                 JsonNode stopArea = item.path("stop_area");
                 String navitiaId = stopArea.path("id").asText(null);
                 if (navitiaId == null || stationTerRepository.existsByNavitiaId(navitiaId)) {
-                    continue; // idempotent : on ne recree pas une gare deja en base
+                    continue; 
                 }
 
                 stationTerRepository.save(buildStationFromRecord(stopArea, item));

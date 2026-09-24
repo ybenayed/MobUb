@@ -50,7 +50,6 @@ fun FreeVehicleBubble(
     var textHeureAbbrev by remember { mutableStateOf("h") }
     var textSecondesAbbrev by remember { mutableStateOf("s") }
 
-    // État local asynchrone pour stocker le libellé traduit du véhicule
     var vehicleTypeLabel by remember { mutableStateOf("") }
 
     LaunchedEffect(currentLanguage, detail) {
@@ -71,7 +70,6 @@ fun FreeVehicleBubble(
         textHeureAbbrev = languageViewModel.translate("h")
         textSecondesAbbrev = languageViewModel.translate("s")
 
-        // Appel asynchrone sécurisé de la fonction suspendue label
         vehicleTypeLabel = if (detail != null) {
             try {
                 FreeVehicleTypeStyle.label(detail.vehicleTypeId, languageViewModel)

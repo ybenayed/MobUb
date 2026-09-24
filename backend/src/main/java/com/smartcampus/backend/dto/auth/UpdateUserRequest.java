@@ -5,10 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/**
- * Champs modifiables sur le profil. Tous optionnels :
- * seuls les champs non nuls envoyes par le client seront mis a jour.
- */
+// Requete du screen "Mon compte" -> "Modifier mes informations personnelles".
+//mot de passe non requis ici , juste les infos personnelles (email, phoneNumber, nationality, residence)
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

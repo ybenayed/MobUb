@@ -26,7 +26,7 @@ fun SearchHistoryCard(
     item: SearchHistoryDto,
     isDeleting: Boolean,
     onDelete: () -> Unit,
-    myLocationLabel: String = "Ma position",   // <-- traduit par l'ecran parent, jamais stocke en base
+    myLocationLabel: String = "Ma position",
     deleteLabel: String = "Supprimer",
     modifier: Modifier = Modifier
 ) {
@@ -38,8 +38,6 @@ fun SearchHistoryCard(
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
 
-            // Bloc origine / destination empile verticalement (comme Google Maps) :
-            // regle definitivement le mauvais rendu quand un nom est trop long.
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 RouteEndpointRow(
                     icon = Icons.Default.TripOrigin,
@@ -142,12 +140,7 @@ private fun RouteEndpointRow(
     }
 }
 
-/**
- * Reconnait un nom correspondant a "ma position", que ce soit le nouveau
- * marqueur technique (CURRENT_LOCATION_MARKER) ou un ancien texte deja
- * enregistre en base avant la correction (traduit en dur, potentiellement
- * dans une autre langue que celle affichee actuellement).
- */
+
 private fun isCurrentLocationLabel(raw: String?): Boolean {
     if (raw == null) return false
     if (raw == CURRENT_LOCATION_MARKER) return true

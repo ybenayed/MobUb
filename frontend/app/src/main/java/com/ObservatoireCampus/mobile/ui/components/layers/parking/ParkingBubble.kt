@@ -246,7 +246,7 @@ fun ParkingBubble(
                         // --- ALERTE SI ALIMENTATION OBSOLÈTE ---
                         if (!status.dataFraiche) {
                             Text(
-                                text = "⚠️ $textDonneesObsolescentes",
+                                text = " $textDonneesObsolescentes",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = Color(0xFFD32F2F),
                                 fontWeight = FontWeight.Bold,

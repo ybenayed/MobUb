@@ -90,7 +90,6 @@ class ParkingViewModel(
         loadStatus(id)
     }
 
-    /** Bouton "Reessayer" de la bulle. */
     fun retryStatus() {
         _selectedParkingId.value?.let { loadStatus(it) }
     }

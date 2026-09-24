@@ -31,8 +31,6 @@ import kotlinx.coroutines.delay
  * Bandeau d'erreur.
  * - Le message s'affiche IMMEDIATEMENT (en francais), puis est remplace par sa traduction.
  * - Il reste affiche jusqu'a la croix, ou jusqu'a ce que l'erreur disparaisse.
- * - onRetry : si fourni, affiche un bouton "Reessayer".
- * - autoDismissMillis : par ex. 8_000 pour une fermeture automatique (null = jamais).
  */
 @Composable
 fun ErrorBanner(

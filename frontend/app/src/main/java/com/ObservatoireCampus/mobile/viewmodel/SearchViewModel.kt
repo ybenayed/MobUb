@@ -13,11 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * L'app n'appelle jamais Nominatim directement : elle passe toujours par
- * notre backend Spring (/api/search), via SearchRepository -> GeocodingApi (Retrofit).
- * C'est le backend (GeocodingService.java) qui interroge Nominatim.
- */
 class SearchViewModel : ViewModel() {
 
     private val repository = SearchRepository()
@@ -31,7 +26,6 @@ class SearchViewModel : ViewModel() {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // Erreur de la recherche de lieux (null = tout va bien)
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
@@ -41,7 +35,6 @@ class SearchViewModel : ViewModel() {
         _query.value = newQuery
         _error.value = null
 
-        // Annuler la recherche precedente si l'utilisateur tape vite (debounce)
         searchJob?.cancel()
 
         if (newQuery.isBlank() || newQuery.length < 3) {
@@ -52,7 +45,7 @@ class SearchViewModel : ViewModel() {
 
         searchJob = viewModelScope.launch {
             _isLoading.value = true
-            delay(500) // Attendre 500ms sans saisie avant de lancer la requete
+            delay(500)
 
             try {
                 _suggestions.value = repository.searchPlaces(newQuery)

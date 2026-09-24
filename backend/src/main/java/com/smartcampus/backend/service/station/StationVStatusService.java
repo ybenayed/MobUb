@@ -22,7 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 public class StationVStatusService {
 
     private final RestTemplate restTemplate;
-    private final StationVService stationVService; // pour la jointure avec le statique
+    private final StationVService stationVService; 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String STATION_STATUS_URL =
@@ -35,10 +35,9 @@ public class StationVStatusService {
 
     private final ReentrantLock refreshLock = new ReentrantLock();
     private volatile Map<String, StationVStatusDTO> cache = new HashMap<>();
-    private volatile Instant cacheExpiresAt = Instant.EPOCH; // deja expire au demarrage
+    private volatile Instant cacheExpiresAt = Instant.EPOCH; 
     private volatile long lastKnownTtlSeconds = DEFAULT_TTL_SECONDS;
 
-    // Recupere le statut d'une station, en passant par le cache
     public Optional<StationVStatusDTO> getStatus(String stationId) {
         ensureCacheFresh();
         return Optional.ofNullable(cache.get(stationId));
@@ -47,12 +46,11 @@ public class StationVStatusService {
     // Rafraichit le cache si expire (thread-safe, evite les appels concurrents en double)
     private void ensureCacheFresh() {
         if (Instant.now().isBefore(cacheExpiresAt)) {
-            return; // cache encore valide, rien a faire
+            return; 
         }
 
         refreshLock.lock();
         try {
-            // Double-check : un autre thread a peut-etre deja rafraichi pendant qu'on attendait le lock
             if (Instant.now().isBefore(cacheExpiresAt)) {
                 return;
             }
@@ -82,15 +80,12 @@ public class StationVStatusService {
 
             log.info("Cache statut velos rafraichi : {} stations, prochain refresh dans {}s", fresh.size(), ttl);
         } catch (Exception e) {
-            // On ne casse pas le service si l'API est en panne : on garde l'ancien cache
-            // et on retentera au prochain appel (ou apres un court delai) plutot que de spammer l'API.
             log.warn("Echec rafraichissement statut velos, on garde le cache existant ({} stations) : {}",
                     cache.size(), e.getMessage());
             cacheExpiresAt = Instant.now().plusSeconds(Math.min(lastKnownTtlSeconds, 15));
         }
     }
 
-    // Jointure statique (DB) + dynamique (cache) pour une station donnee
     public Optional<StationVDetailDTO> getStationDetail(String stationId) {
         Optional<StationV> staticData = stationVService.getByStationId(stationId);
         if (staticData.isEmpty()) {

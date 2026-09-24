@@ -8,11 +8,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.drawable.BitmapDrawable
 
-/**
- * Icône simple de type "pin" rouge pour marquer un lieu trouvé par la recherche.
- * Volontairement plus sobre que le pin bleu de "Ma position" (une seule couleur,
- * pas de contour ni de double cercle) pour bien les distinguer visuellement.
- */
+
 fun createSearchResultMarkerIcon(context: Context): BitmapDrawable {
     val widthDp = 36
     val heightDp = 46
@@ -28,7 +24,7 @@ fun createSearchResultMarkerIcon(context: Context): BitmapDrawable {
     val headCenterY = headRadius + (heightPx * 0.02f)
     val tipY = heightPx.toFloat() - (heightPx * 0.02f)
 
-    val red = Color.rgb(220, 38, 38) // même rouge que vos autres accents (cf. polygones campus)
+    val red = Color.rgb(220, 38, 38)
 
     val pinPath = Path().apply {
         moveTo(centerX, tipY)
@@ -44,7 +40,6 @@ fun createSearchResultMarkerIcon(context: Context): BitmapDrawable {
     val pinPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = red }
     canvas.drawPath(pinPath, pinPaint)
 
-    // Petit rond blanc au centre : simple, pas de double cercle contrairement au pin "Ma position"
     val innerWhitePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.WHITE }
     canvas.drawCircle(centerX, headCenterY, headRadius * 0.32f, innerWhitePaint)
 

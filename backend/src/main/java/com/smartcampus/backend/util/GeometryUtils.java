@@ -6,18 +6,12 @@ import org.locationtech.jts.geom.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Parsing GeoJSON partagé par CampusService et BatimentService.
- * Gère à la fois "Polygon" et "MultiPolygon" (une feature avec plusieurs blocs
- * disjoints), ce qui évite de silencieusement perdre des bâtiments ou des
- * morceaux du campus dont la géométrie n'est pas un simple Polygon.
- */
+
 public final class GeometryUtils {
 
     private GeometryUtils() {
     }
 
-    /** Parse le noeud "geometry" d'une feature GeoJSON en Polygon ou MultiPolygon. */
     public static Geometry parseGeometry(JsonNode geometryNode, GeometryFactory gf) {
         String type = geometryNode.path("type").asText("");
         JsonNode coordinates = geometryNode.path("coordinates");
@@ -35,7 +29,7 @@ public final class GeometryUtils {
     }
 
     private static Polygon toPolygon(JsonNode polygonCoords, GeometryFactory gf) {
-        JsonNode ring = polygonCoords.get(0); // anneau extérieur ; les trous éventuels sont ignorés
+        JsonNode ring = polygonCoords.get(0); 
         List<Coordinate> coords = new ArrayList<>();
         for (JsonNode pt : ring) {
             coords.add(new Coordinate(pt.get(0).asDouble(), pt.get(1).asDouble()));
@@ -58,7 +52,6 @@ public final class GeometryUtils {
         return gf.createMultiPolygon(polygons.toArray(new Polygon[0]));
     }
 
-    /** Fusionne plusieurs géométries (ex : les 2 parties du campus) en une seule. */
     public static Geometry union(List<Geometry> geometries) {
         Geometry result = geometries.get(0);
         for (int i = 1; i < geometries.size(); i++) {
@@ -67,7 +60,6 @@ public final class GeometryUtils {
         return result;
     }
 
-    /** Périmètre total en mètres, en additionnant chaque anneau extérieur (fonctionne aussi pour un MultiPolygon). */
     public static double perimeterMeters(Geometry geometry) {
         double total = 0;
         for (int i = 0; i < geometry.getNumGeometries(); i++) {
@@ -79,13 +71,6 @@ public final class GeometryUtils {
         return total;
     }
 
-    /**
-     * Découpe une géométrie (Polygon ou MultiPolygon) en une liste de parties,
-     * chaque partie étant la liste des points [lng, lat] de son anneau extérieur.
-     * Un Polygon simple donne une liste à un seul élément ; un MultiPolygon (ex :
-     * campus en plusieurs blocs disjoints) donne une entrée par bloc, pour que
-     * le front dessine chaque bloc séparément au lieu de les relier par une ligne parasite.
-     */
     public static List<List<double[]>> extractExteriorRings(Geometry geometry) {
         List<List<double[]>> parts = new ArrayList<>();
         if (geometry == null) {

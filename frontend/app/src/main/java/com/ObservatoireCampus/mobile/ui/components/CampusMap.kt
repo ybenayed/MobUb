@@ -129,7 +129,7 @@ private fun drawCampusPolygons(mapView: MapView, campusList: List<CampusDto>) {
                 outlinePaint.strokeWidth = 3f
                 title = campus.name
                 snippet = "Campus"
-                infoWindow = CustomInfoWindow(mapView, strokeColor)   // <-- ajouté
+                infoWindow = CustomInfoWindow(mapView, strokeColor)
                 setOnClickListener { _, _, _ ->
                     InfoWindow.closeAllInfoWindowsOn(mapView)
                     showInfoWindow()
@@ -165,8 +165,6 @@ private fun drawBatimentPolygons(mapView: MapView, batimentList: List<BatimentDt
 
         val fillArgb = withAlpha(baseColorInt, alpha = 200)
 
-        // Un bâtiment en plusieurs blocs disjoints a une entrée par bloc dans
-        // polygonCoordinates : on dessine chaque bloc, pas seulement le premier.
         batiment.polygonCoordinates.forEach { outerRing ->
             if (outerRing.size < 3) return@forEach
 

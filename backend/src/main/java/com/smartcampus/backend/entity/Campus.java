@@ -27,8 +27,7 @@ public class Campus {
 
     private Double perimeterMeters;
 
-    // Geometry générique : peut être un Polygon ou un MultiPolygon
-    // (ex : campus en plusieurs parties disjointes)
+    
     @Column(columnDefinition = "geometry(Geometry,4326)")
     private Geometry polygon;
 

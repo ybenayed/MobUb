@@ -18,7 +18,7 @@ public class StationV {
     private Long id;
 
     @Column(unique = true, nullable = false)
-    private String stationId;   // ex: "1", "506" - station_id GBFS
+    private String stationId;   
 
     private String nom;
     private String adresse;

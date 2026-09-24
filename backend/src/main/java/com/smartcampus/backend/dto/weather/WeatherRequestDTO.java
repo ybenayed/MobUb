@@ -15,14 +15,8 @@ public class WeatherRequestDTO {
 
 
     private Double latitude;
-
-
     private Double longitude;
-
-
     private LocalDate date;
-
-
     private LocalTime time;
 
 }

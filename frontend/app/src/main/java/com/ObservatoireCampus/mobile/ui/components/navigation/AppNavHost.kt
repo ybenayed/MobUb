@@ -16,6 +16,7 @@ import androidx.navigation.navArgument
 import com.ObservatoireCampus.mobile.model.search.history.SearchHistoryDto
 import com.ObservatoireCampus.mobile.network.RetrofitClient
 import com.ObservatoireCampus.mobile.repository.AuthRepository
+import com.ObservatoireCampus.mobile.repository.NationalityRepository
 import com.ObservatoireCampus.mobile.ui.screens.AccountScreen
 import com.ObservatoireCampus.mobile.ui.screens.ForgotPasswordScreen
 import com.ObservatoireCampus.mobile.ui.screens.InternshipScreen
@@ -47,17 +48,12 @@ fun AppNavHost(
             tokenManager = RetrofitClient.getTokenManager()
         )
     }
+    val nationalityRepository = remember {
+        NationalityRepository(nationalityApi = RetrofitClient.nationalityApi)
+    }
 
-    // AJOUT : porte l'itineraire choisi depuis l'ecran Historique jusqu'a MapScreen.
-    // Reste valide tant qu'AppNavHost n'est pas recompose depuis zero (i.e. tant que
-    // l'app tourne), contrairement a un ViewModel scope a une destination du NavHost.
     var pendingHistoryItem by remember { mutableStateOf<SearchHistoryDto?>(null) }
 
-    // CORRECTIF : si un token existe deja (session precedente non deconnectee),
-    // on demarre directement sur la carte au lieu de repasser par Login a chaque
-    // fois qu'Android recree le process (changement d'appli, mise en arriere-plan,
-    // rotation memoire...). Sans ca, l'utilisateur avait l'impression d'etre
-    // deconnecte alors que son token etait toujours valide et stocke.
     val startDestination = remember {
         if (RetrofitClient.getTokenManager().hasToken()) {
             Screen.Map.route
@@ -70,7 +66,7 @@ fun AppNavHost(
 
         composable(Screen.Login.route) {
             val authViewModel: AuthViewModel = viewModel(
-                factory = AuthViewModelFactory(authRepository, languageViewModel)
+                factory = AuthViewModelFactory(authRepository, languageViewModel, nationalityRepository)
             )
             val uiState by authViewModel.uiState.collectAsState()
 
@@ -101,9 +97,10 @@ fun AppNavHost(
 
         composable(Screen.SignUp.route) {
             val authViewModel: AuthViewModel = viewModel(
-                factory = AuthViewModelFactory(authRepository, languageViewModel)
+                factory = AuthViewModelFactory(authRepository, languageViewModel, nationalityRepository)
             )
             val uiState by authViewModel.uiState.collectAsState()
+            val nationalities by authViewModel.nationalities.collectAsState()
 
             LaunchedEffect(uiState) {
                 if (uiState is AuthUiState.Success) {
@@ -132,7 +129,8 @@ fun AppNavHost(
                     navController.popBackStack()
                 },
                 isLoading = uiState is AuthUiState.Loading,
-                errorMessage = (uiState as? AuthUiState.Error)?.message
+                errorMessage = (uiState as? AuthUiState.Error)?.message,
+                nationalities = nationalities
             )
         }
 
@@ -151,7 +149,6 @@ fun AppNavHost(
                 onHistoryClick = {
                     navController.navigate(Screen.History.route)
                 },
-                // AJOUT : navigation admin
                 onUserManagementClick = {
                     navController.navigate(Screen.AdminUsers.route)
                 },
@@ -195,18 +192,18 @@ fun AppNavHost(
 
         composable(Screen.History.route) {
             SearchHistoryScreen(
-                languageViewModel = languageViewModel, // AJOUT : necessaire pour TopBar + traductions
+                languageViewModel = languageViewModel,
                 onBack = { navController.popBackStack() },
                 onViewOnMap = { item ->
                     pendingHistoryItem = item
-                    navController.popBackStack() // revient sur Map, qui est deja dans la pile
+                    navController.popBackStack()
                 }
             )
         }
 
         composable(Screen.Account.route) {
             val accountViewModel: AccountViewModel = viewModel(
-                factory = AccountViewModelFactory(authRepository, languageViewModel)
+                factory = AccountViewModelFactory(authRepository, languageViewModel, nationalityRepository)
             )
             AccountScreen(
                 accountViewModel = accountViewModel,
@@ -242,7 +239,7 @@ fun AppNavHost(
 
         composable("forgot_password") {
             val authViewModel: AuthViewModel = viewModel(
-                factory = AuthViewModelFactory(authRepository, languageViewModel)
+                factory = AuthViewModelFactory(authRepository, languageViewModel, nationalityRepository)
             )
             val uiState by authViewModel.uiState.collectAsState()
 

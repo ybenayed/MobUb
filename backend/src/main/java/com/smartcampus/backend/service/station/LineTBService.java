@@ -12,18 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
 
-/**
- * Referentiel des lignes bus/tram TBM : traduit un LineRef technique
- * (ex: "bordeaux:Line:59:LOC") en code public affiche aux usagers
- * (ex: "A" pour le tram, "15" pour un bus).
- *
- * Source : endpoint lines-discovery.json (SIRI-Lite Mecatran), qui expose
- * le champ LineCode contenant precisement ce code public.
- *
- * Les lignes du reseau changeant rarement (quelques fois par an, lors des
- * plans de transport), le referentiel est mis en cache en memoire avec un
- * TTL long plutot que rappele a chaque passage.
- */
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -36,19 +25,14 @@ public class LineTBService {
         "https://bdx.mecatran.com/utw/ws/siri/2.0/bordeaux/lines-discovery.json" +
         "?AccountKey=opendata-bordeaux-metropole-flux-gtfs-rt";
 
-    // 6h de cache : largement suffisant, le referentiel des lignes est quasi statique
+    // 6h de cache :  le referentiel des lignes est quasi statique
     private static final long CACHE_TTL_SECONDS = 6 * 60 * 60;
 
     private volatile Map<String, String> lineCodeByRef = Map.of();
     private volatile Instant expiresAt = Instant.EPOCH;
     private final ReentrantLock lock = new ReentrantLock();
 
-    /**
-     * Renvoie le code public de la ligne (ex: "A", "B", "15") a partir de son
-     * LineRef technique (ex: "bordeaux:Line:59:LOC"). Renvoie null si le
-     * referentiel n'a pas cette ligne (nouvelle ligne pas encore synchro,
-     * ou reference invalide).
-     */
+    
     public String resolveLineCode(String lineRef) {
         if (lineRef == null || lineRef.isBlank()) return null;
         ensureFresh();
@@ -60,7 +44,7 @@ public class LineTBService {
 
         lock.lock();
         try {
-            if (Instant.now().isBefore(expiresAt)) return; // double-check apres acquisition du lock
+            if (Instant.now().isBefore(expiresAt)) return; 
 
             Map<String, String> fresh = fetchLines();
             if (!fresh.isEmpty()) {
@@ -70,7 +54,6 @@ public class LineTBService {
             }
         } catch (Exception e) {
             log.error("Erreur rafraichissement referentiel lignes TB, conservation de l'ancien cache", e);
-            // On evite de re-appeler l'API en boucle si elle est en erreur : on retente dans 1 min
             expiresAt = Instant.now().plusSeconds(60);
         } finally {
             lock.unlock();

@@ -7,14 +7,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
+import lombok.*;
 import java.time.LocalDateTime;
-import  lombok.*;
-/**
- * Utilisateur de l'application (login / creation de compte).
- * nationality / residence sont conserves a des fins statistiques
- * pour l'Observatoire de mobilite.
- */
+//Utilisateur de l'application doit etre identifie par un nom d'utilisateur unique et un email unique.
+ 
 @Entity
 @Table(name = "users", uniqueConstraints = {
         @UniqueConstraint(columnNames = "username"),
@@ -47,7 +43,6 @@ public class User {
     @Column(length = 120)
     private String residence;
 
-    /** Mot de passe hashe (BCrypt) - jamais en clair. */
     @Column(nullable = false)
     private String password;
 
@@ -68,7 +63,6 @@ public class User {
         USER,
         ADMIN
     }
-    // pour regenerer le mot de passe de l'utilisateur, on peut utiliser BCryptPasswordEncoder de Spring Security
     @Column(name = "reset_code")
     private String resetCode;
 

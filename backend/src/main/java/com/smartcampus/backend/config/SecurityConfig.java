@@ -19,7 +19,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
-
+// Configuration de la securite de l'application (Spring Security)
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -59,7 +59,7 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
                             "/api/search-history/**", "/api/parking/**", "/api/weather/**",
                             "/api/air-quality/**", "/api/stationTB/**", "/api/stationTer/**",
                             "/api/stationV/**", "/api/search/**", "/api/itinerary/**",
-                            "/api/freeVehicle/**").permitAll()
+                            "/api/freeVehicle/**","/api/nationalities").permitAll()
                     .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

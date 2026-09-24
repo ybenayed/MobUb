@@ -28,7 +28,6 @@ object ParkingTypeStyle {
         else -> Icons.Default.DirectionsCar
     }
 
-    // AJOUT de LanguageViewModel pour traduire dynamiquement
     suspend fun label(taType: String, languageViewModel: LanguageViewModel): String {
         val key = when {
             taType.contains("PARC_RELAIS") -> "Parc relais"
@@ -57,7 +56,6 @@ object ParkingTypeStyle {
         else -> Icons.Default.LocalParking
     }
 
-    // AJOUT de LanguageViewModel pour traduire dynamiquement
     suspend fun structureLabel(type: String?, languageViewModel: LanguageViewModel): String {
         val key = when (type) {
             "SILO" -> "Silo"

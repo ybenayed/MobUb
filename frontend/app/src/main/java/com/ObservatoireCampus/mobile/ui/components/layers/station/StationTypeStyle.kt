@@ -8,7 +8,7 @@ import androidx.compose.material.icons.filled.Tram
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.filled.Train
-import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel // AJOUT
+import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 
 object StationTypeStyle {
     fun color(key: String): Color = when (key) {
@@ -27,13 +27,12 @@ object StationTypeStyle {
         else -> Icons.Default.Place
     }
 
-    // MODIFICATION : suspend et traduction dynamique via le ViewModel
 
     suspend fun label(key: String, languageViewModel: LanguageViewModel): String {
         val rawLabel = when (key) {
             "TRAM" -> "Tram"
             "BUS" -> "Bus"
-            "VELO" -> "Vélo" // <-- Correction ici : "Vélo" avec accent pour correspondre au dictionnaire standard
+            "VELO" -> "Vélo"
             "TER" -> "TER"
             else -> key
         }

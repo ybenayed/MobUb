@@ -9,7 +9,7 @@ import com.smartcampus.backend.service.CampusService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+// Controller pour la gestion de l'infrastructure (campus et batiments) par l'admin
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor

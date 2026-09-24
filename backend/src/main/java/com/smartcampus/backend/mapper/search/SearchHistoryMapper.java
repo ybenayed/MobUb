@@ -87,7 +87,6 @@ public class SearchHistoryMapper {
                 .build();
     }
 
-    // ------------------------------------------------------------------
 
     private PlaceRef toPlaceRef(SearchResultDTO dto) {
         if (dto == null) return null;

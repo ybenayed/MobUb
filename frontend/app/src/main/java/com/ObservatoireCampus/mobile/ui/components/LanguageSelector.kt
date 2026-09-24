@@ -41,7 +41,6 @@ fun LanguageSelector(
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
     var expanded by remember { mutableStateOf(false) }
 
-    // Le zIndex(10f) force Compose à afficher ce bloc TOUJOURS au-dessus de la carte OSM
     Box(modifier = modifier.zIndex(10f)) {
         Surface(
             shape = RoundedCornerShape(50),
@@ -77,7 +76,7 @@ fun LanguageSelector(
             onDismissRequest = { expanded = false },
             modifier = Modifier
                 .background(Color.White)
-                .zIndex(11f) // Force la liste déroulante à passer par-dessus l'en-tête
+                .zIndex(11f)
         ) {
             AppLanguage.values().forEach { lang ->
                 DropdownMenuItem(

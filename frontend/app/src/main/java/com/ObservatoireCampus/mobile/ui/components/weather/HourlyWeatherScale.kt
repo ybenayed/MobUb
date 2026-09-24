@@ -36,8 +36,8 @@ fun HourlyWeatherScale(
     points: List<HourlyWeatherPointDto>,
     selectedIndex: Int,
     onHourSelected: (Int) -> Unit,
-    languageViewModel: LanguageViewModel, // <-- AJOUT
-    currentLanguage: AppLanguage,          // <-- AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage,
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()

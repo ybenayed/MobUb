@@ -7,6 +7,7 @@ import com.ObservatoireCampus.mobile.model.auth.ChangePasswordRequestDto
 import com.ObservatoireCampus.mobile.model.auth.UpdateProfileRequestDto
 import com.ObservatoireCampus.mobile.model.auth.UserDto
 import com.ObservatoireCampus.mobile.repository.AuthRepository
+import com.ObservatoireCampus.mobile.repository.NationalityRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,9 +37,6 @@ data class AccountUiState(
     val isConfirmPasswordVisible: Boolean = false,
     val isChangingPassword: Boolean = false
 ) {
-    // Checklist live des regles de complexite - meme logique que SignUpScreen
-    // (majuscule, chiffre, caractere special, 8 caracteres min ; pas de regle
-    // de minuscule, pour rester coherent avec le @ValidPassword du backend).
     val hasMinLength get() = newPassword.length >= 8
     val hasUppercase get() = newPassword.any { it.isUpperCase() }
     val hasDigit get() = newPassword.any { it.isDigit() }
@@ -51,14 +49,29 @@ data class AccountUiState(
 
 class AccountViewModel(
     private val authRepository: AuthRepository,
-    private val languageViewModel: LanguageViewModel
+    private val languageViewModel: LanguageViewModel,
+    private val nationalityRepository: NationalityRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountUiState())
     val uiState: StateFlow<AccountUiState> = _uiState.asStateFlow()
 
+    // Liste des nationalités pour la liste déroulante du champ "Nationalité",
+    // chargée uniquement depuis le backend (GET /api/nationalities).
+    // Vide tant que la réponse n'est pas arrivée (ou si l'appel échoue).
+    private val _nationalities = MutableStateFlow<List<String>>(emptyList())
+    val nationalities: StateFlow<List<String>> = _nationalities.asStateFlow()
+
     init {
         loadUser()
+        loadNationalities()
+    }
+
+    fun loadNationalities() {
+        viewModelScope.launch {
+            nationalityRepository.getNationalities()
+                .onSuccess { list -> _nationalities.value = list }
+        }
     }
 
     fun loadUser() {
@@ -214,12 +227,13 @@ class AccountViewModel(
 
 class AccountViewModelFactory(
     private val authRepository: AuthRepository,
-    private val languageViewModel: LanguageViewModel
+    private val languageViewModel: LanguageViewModel,
+    private val nationalityRepository: NationalityRepository
 ) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(AccountViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return AccountViewModel(authRepository, languageViewModel) as T
+            return AccountViewModel(authRepository, languageViewModel, nationalityRepository) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

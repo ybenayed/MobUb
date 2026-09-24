@@ -24,8 +24,8 @@ fun LocationBubble(
     loading: Boolean,
     accuracyMeters: Float? = null,
     onClose: () -> Unit,
-    languageViewModel: LanguageViewModel, // <-- AJOUT
-    currentLanguage: AppLanguage,          // <-- AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage,
     modifier: Modifier = Modifier
 ) {
     // États pour stocker les textes traduits
@@ -63,7 +63,7 @@ fun LocationBubble(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = translatedHeader, // <-- TRADUIT
+                        text = translatedHeader,
                         style = MaterialTheme.typography.labelSmall,
                         color = Color(0xFF1976D2),
                         fontWeight = FontWeight.Bold,
@@ -71,7 +71,7 @@ fun LocationBubble(
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = translatedSubHeader, // <-- TRADUIT
+                        text = translatedSubHeader,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                         textAlign = TextAlign.Center
@@ -84,7 +84,7 @@ fun LocationBubble(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Fermer", // Optionnel : à traduire aussi si nécessaire
+                        contentDescription = "Fermer",
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -103,7 +103,7 @@ fun LocationBubble(
                 }
                 point == null -> {
                     Text(
-                        text = translatedUnavailable, // <-- TRADUIT
+                        text = translatedUnavailable,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp),
@@ -113,16 +113,16 @@ fun LocationBubble(
                 else -> {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         InfoRow(
-                            label = translatedLatitude, // <-- TRADUIT
+                            label = translatedLatitude,
                             value = "%.5f".format(point.latitude)
                         )
                         InfoRow(
-                            label = translatedLongitude, // <-- TRADUIT
+                            label = translatedLongitude,
                             value = "%.5f".format(point.longitude)
                         )
                         accuracyMeters?.let {
                             InfoRow(
-                                label = translatedPrecision, // <-- TRADUIT
+                                label = translatedPrecision,
                                 value = "± ${it.roundToInt()} m",
                                 valueColor = Color(0xFF4CAF50)
                             )

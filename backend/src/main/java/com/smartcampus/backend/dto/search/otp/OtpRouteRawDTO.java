@@ -1,4 +1,3 @@
-// OtpRouteRawDTO.java
 package com.smartcampus.backend.dto.search.otp;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

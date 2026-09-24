@@ -18,7 +18,6 @@ sealed class Screen(val route: String) {
     object Account : Screen("account")
     object History : Screen("search_history")
 
-    // AJOUT : ecrans reserves a l'admin
     object AdminUsers : Screen("admin_users")
     object AdminInfrastructure : Screen("admin_infrastructure")
     object AdminLegends : Screen("admin_legends")

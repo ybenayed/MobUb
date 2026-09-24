@@ -29,7 +29,7 @@ import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 @Composable
 fun DrawerMenu(
     languageViewModel: LanguageViewModel,
-    isAdmin: Boolean = false,   // AJOUT : bascule le menu USER / ADMIN
+    isAdmin: Boolean = false,   // bascule le menu USER / ADMIN
     parkingLayers: List<LayerItemUiState>,
     parkingMasterActive: Boolean,
     parkingExpanded: Boolean,

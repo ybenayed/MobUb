@@ -21,6 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.ObservatoireCampus.mobile.ui.components.NationalityDropdownField
 import com.ObservatoireCampus.mobile.ui.components.TopBar
 import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.viewmodel.AccountUiState
@@ -93,6 +94,7 @@ fun AccountScreen(
     onBack: () -> Unit
 ) {
     val state by accountViewModel.uiState.collectAsState()
+    val nationalities by accountViewModel.nationalities.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
     val currentLanguage by languageViewModel.currentLanguage.collectAsState()
@@ -217,7 +219,8 @@ fun AccountScreen(
                             onStartEdit = accountViewModel::startEditing,
                             onDraftChange = accountViewModel::updateDraft,
                             onSave = accountViewModel::saveField,
-                            onCancel = accountViewModel::cancelEditing
+                            onCancel = accountViewModel::cancelEditing,
+                            dropdownOptions = nationalities
                         )
                         HorizontalDivider()
                         EditableFieldRow(
@@ -305,11 +308,6 @@ private fun ProfileHeaderCard(
     }
 }
 
-/**
- * Ligne d'un champ modifiable, avec icone d'illustration : affichage simple +
- * bouton "crayon" ; en mode edition, se transforme en TextField + boutons
- * valider/annuler ("un bouton a la fin de chaque champ qui donne la main pour changer").
- */
 @Composable
 private fun EditableFieldRow(
     icon: ImageVector,
@@ -326,7 +324,8 @@ private fun EditableFieldRow(
     onDraftChange: (String) -> Unit,
     onSave: () -> Unit,
     onCancel: () -> Unit,
-    showDivider: Boolean = true
+    showDivider: Boolean = true,
+    dropdownOptions: List<String>? = null
 ) {
     val isEditingThis = state.editingField == field
 
@@ -340,15 +339,26 @@ private fun EditableFieldRow(
         Spacer(Modifier.width(16.dp))
 
         if (isEditingThis) {
-            OutlinedTextField(
-                value = state.fieldDraft,
-                onValueChange = onDraftChange,
-                label = { Text(label) },
-                modifier = Modifier.weight(1f),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                enabled = !state.isSavingField
-            )
+            if (dropdownOptions != null) {
+                NationalityDropdownField(
+                    value = state.fieldDraft,
+                    onValueChange = onDraftChange,
+                    label = label,
+                    modifier = Modifier.weight(1f),
+                    enabled = !state.isSavingField,
+                    options = dropdownOptions
+                )
+            } else {
+                OutlinedTextField(
+                    value = state.fieldDraft,
+                    onValueChange = onDraftChange,
+                    label = { Text(label) },
+                    modifier = Modifier.weight(1f),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                    enabled = !state.isSavingField
+                )
+            }
             if (state.isSavingField) {
                 Spacer(Modifier.width(8.dp))
                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)

@@ -20,7 +20,7 @@ public class StationTer {
     @Column(unique = true, nullable = false)
     private String navitiaId;   // ex: stop_area:SNCF:87581009
 
-    private String nom;         // ex: Bordeaux Saint-Jean
+    private String nom;      
 
     private Double latitude;
     private Double longitude;
@@ -28,5 +28,5 @@ public class StationTer {
     @Column(columnDefinition = "geometry(Point,4326)")
     private Point location;
 
-    private Double distanceCentreMetres; // distance au centre de recherche, informatif
+    private Double distanceCentreMetres; 
 }

@@ -1,7 +1,7 @@
 package com.ObservatoireCampus.mobile.model.weather
 
 /**
- * Utilise pour interroger /api/weather/at ET /api/air-quality/at (meme forme cote backend).
+ * Mirroir du  cote backend.
  */
 data class WeatherRequestDto(
     val latitude: Double,

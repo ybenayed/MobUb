@@ -40,7 +40,7 @@ fun LayerSection(
     onItemToggle: (String) -> Unit,
     itemColor: (String) -> Color = { ParkingTypeStyle.color(it) },
     itemIcon: (String) -> ImageVector = { ParkingTypeStyle.icon(it) },
-    itemLabel: (String) -> String = { it } // <--- MODIFIÉ : Retourne simplement la clé par défaut
+    itemLabel: (String) -> String = { it }
 ) {
     Surface(
         modifier = Modifier
@@ -51,7 +51,7 @@ fun LayerSection(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
     ) {
         Column {
-            // Ligne maître principale
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -92,7 +92,6 @@ fun LayerSection(
                 }
             }
 
-            // Sous-liste dynamique
             AnimatedVisibility(
                 visible = expanded && items.isNotEmpty(),
                 enter = fadeIn() + expandVertically(),

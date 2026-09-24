@@ -56,7 +56,6 @@ class FreeVehicleViewModel(
         loadDetail(bikeId)
     }
 
-    /** Bouton "Reessayer" de la bulle. */
     fun retryDetail() {
         _selectedVehicleId.value?.let { loadDetail(it) }
     }

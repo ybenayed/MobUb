@@ -24,7 +24,6 @@ public class AirQualityQueryService {
     private static final String AIR_QUALITY_URL = "https://air-quality-api.open-meteo.com/v1/air-quality";
 
     private static final int PAST_DAYS = 7;
-    // NB : l'API air-quality limite forecast_days a 7 maximum (contrairement a l'API meteo qui va jusqu'a 16).
     private static final int FORECAST_DAYS = 7;
 
     public AirQualityQueryService(RestTemplate restTemplate) {
@@ -72,7 +71,6 @@ public class AirQualityQueryService {
         JsonNode hourly = root.path("hourly");
         JsonNode hourlyTime = hourly.path("time");
 
-        // ─── Indices horaires appartenant a la date demandee
         List<Integer> dayIndexes = new ArrayList<>();
         for (int i = 0; i < hourlyTime.size(); i++) {
             String iso = hourlyTime.get(i).asText();
@@ -109,7 +107,6 @@ public class AirQualityQueryService {
                 .description(dayInfo.description())
                 .icon(dayInfo.icon());
 
-        // ─── Si une heure est fournie, on affine avec le point horaire correspondant
         if (requestedTime != null) {
             int hourIndex = -1;
             for (int i : dayIndexes) {

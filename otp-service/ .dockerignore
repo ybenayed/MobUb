@@ -1,8 +1,0 @@
-# otp-service/.dockerignore
-
-# Dossiers de test / restes du quickstart officiel OTP, pas utiles ici
-berlin/
-otp/
-
-.git
-.gitignore

@@ -25,8 +25,8 @@ import com.ObservatoireCampus.mobile.viewmodel.location.LocationViewModel
 @Composable
 fun LocationButton(
     viewModel: LocationViewModel,
-    languageViewModel: LanguageViewModel, // <-- AJOUT
-    currentLanguage: AppLanguage,          // <-- AJOUT
+    languageViewModel: LanguageViewModel,
+    currentLanguage: AppLanguage,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -83,7 +83,7 @@ fun LocationButton(
     ) {
         Icon(
             imageVector = Icons.Default.MyLocation,
-            contentDescription = translatedContentDescription, // <-- TRADUIT
+            contentDescription = translatedContentDescription,
             tint = if (isActive) Color(0xFF1976D2) else MaterialTheme.colorScheme.primary
         )
     }

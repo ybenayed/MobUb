@@ -1,9 +1,8 @@
-// OtpGraphQlResponseDTO.java
 package com.smartcampus.backend.dto.search.otp;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-/** Racine de la reponse GraphQL brute d'OTP. Usage interne, jamais expose au frontend. */
+/** Racine de la reponse GraphQL brute d'OTP.  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class OtpGraphQlResponseDTO {
     private OtpDataRawDTO data;

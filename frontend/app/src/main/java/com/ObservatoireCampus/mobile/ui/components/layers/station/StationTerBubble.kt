@@ -155,7 +155,7 @@ private fun PassageTerRow(
     labelInconnu: String,
     labelRetard: String
 ) {
-    // Temps reel : on affiche l'heure prevue ; sinon l'heure theorique.
+    // Temps reel
     val heureBrute = if (passage.tempsReel) {
         passage.heurePrevue ?: passage.heureTheorique
     } else {
@@ -230,12 +230,10 @@ private fun PassageTerRow(
 private fun formatHeure(raw: String?): String {
     if (raw.isNullOrBlank()) return "--:--"
 
-    // Format deja pret (renvoye par le backend TER) : "11:53"
     Regex("""^(\d{1,2}):(\d{2})$""").matchEntire(raw.trim())?.let {
         return "${it.groupValues[1].padStart(2, '0')}:${it.groupValues[2]}"
     }
 
-    // Formats avec un "T" : "20260921T115300" ou "2026-09-21T11:53:00"
     val timePart = raw.substringAfter('T', raw).trim()
     Regex("""^(\d{2}):(\d{2})""").find(timePart)?.let {
         return "${it.groupValues[1]}:${it.groupValues[2]}"

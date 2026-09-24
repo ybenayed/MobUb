@@ -1,16 +1,21 @@
-# Android Studio
-.gradle/
-local.properties
+# Android Studio / IDE
+.idea/
+.vscode/
+*.iml
 
-# Build
+# Build & Gradle
+.gradle/
 build/
 target/
 
 # Logs
 *.log
 
-# IDE
-.idea/
-*.iml
+# Variables d'environnement & Dumps SQL
+.env
+*.sql
 
-
+# OTP Data (fichiers lourds générés/téléchargés)
+otp-service/otp-data/*.pbf
+otp-service/otp-data/*.zip
+otp-service/otp-data/graph.obj

@@ -11,6 +11,6 @@ public class CurrentAirQualityDTO {
     private Double nitrogenDioxide;
     private Integer europeanAqi;
     private String category;    // deduit du europeanAqi
-    private String description; // deduit du europeanAqi
-    private String icon;        // deduit du europeanAqi
+    private String description; 
+    private String icon;        
 }

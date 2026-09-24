@@ -17,13 +17,12 @@ import com.ObservatoireCampus.mobile.ui.theme.ObcampusPrimary
 import com.ObservatoireCampus.mobile.viewmodel.LanguageViewModel
 import com.ObservatoireCampus.mobile.viewmodel.history.SearchHistoryViewModel
 
-/** Libelles traduits, meme pattern que AccountScreen. */
 private data class HistoryStrings(
     val title: String = "Historique",
     val loading: String = "Chargement de l'historique...",
     val empty: String = "Aucun itinéraire enregistré pour le moment.",
     val delete: String = "Supprimer",
-    val myLocation: String = "Ma position"   // <-- ajouté
+    val myLocation: String = "Ma position"
 )
 
 private suspend fun LanguageViewModel.translateHistoryStrings(): HistoryStrings {
@@ -39,7 +38,7 @@ private suspend fun LanguageViewModel.translateHistoryStrings(): HistoryStrings 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchHistoryScreen(
-    languageViewModel: LanguageViewModel,          // <-- ajouté (nécessaire pour la trad + TopBar)
+    languageViewModel: LanguageViewModel,
     onBack: () -> Unit,
     onViewOnMap: (SearchHistoryDto) -> Unit,
     viewModel: SearchHistoryViewModel = viewModel()
@@ -60,13 +59,12 @@ fun SearchHistoryScreen(
             TopBar(
                 languageViewModel = languageViewModel,
                 onMenuClick = onBack,
-                isBackButton = true          // flèche retour, comme Mon compte
+                isBackButton = true
             )
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
 
-            // Titre "Historique" sous la TopBar, meme style que "Mon compte"
             Text(
                 text = strings.title,
                 fontWeight = FontWeight.Bold,
@@ -105,7 +103,7 @@ fun SearchHistoryScreen(
                             SearchHistoryCard(
                                 item = item,
                                 isDeleting = item.id in deletingIds,
-                                myLocationLabel = strings.myLocation,   // <-- ajouté
+                                myLocationLabel = strings.myLocation,
                                 deleteLabel = strings.delete,
                                 onDelete = { viewModel.deleteItem(item.id) }
                             )

@@ -26,7 +26,6 @@ fun StationTBDrawerSection(
     LaunchedEffect(currentLanguage, items) {
         translatedTitle = languageViewModel.translate("Bus & Tram")
 
-        // Correction : On résout les fonctions suspendues correctement à l'intérieur du LaunchedEffect
         val newLabels = items.associate { item ->
             item.key to StationTypeStyle.label(item.key, languageViewModel)
         }
@@ -60,11 +59,11 @@ fun StationVDrawerSection(
     currentLanguage: AppLanguage
 ) {
     // Initialisation avec "Vélo" par défaut
-    var translatedTitle by remember { mutableStateOf("Vélo") } // <-- Correction de l'orthographe
+    var translatedTitle by remember { mutableStateOf("Vélo") }
     var translatedItemLabels by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
 
     LaunchedEffect(currentLanguage, items) {
-        translatedTitle = languageViewModel.translate("Vélo") // <-- Envoi de "Vélo" pour traduction
+        translatedTitle = languageViewModel.translate("Vélo")
 
         val newLabels = items.associate { item ->
             item.key to StationTypeStyle.label(item.key, languageViewModel)

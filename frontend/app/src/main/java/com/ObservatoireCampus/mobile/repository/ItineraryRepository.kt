@@ -4,9 +4,7 @@ import com.ObservatoireCampus.mobile.model.search.*
 import com.ObservatoireCampus.mobile.network.RetrofitClient
 
 /**
- * Uniquement le calcul d'itineraires (OTP). L'enregistrement dans l'historique
- * est gere par SearchHistoryRepository (voir ItineraryViewModel.saveToHistory,
- * qui appelle searchHistoryRepository.saveToHistory et non celui-ci).
+ * Uniquement le calcul d'itineraires (OTP). L'enregistrement dans l'historique  est gere par SearchHistoryRepository (voir ItineraryViewModel.saveToHistory qui appelle searchHistoryRepository.saveToHistory et non celui-ci).
  */
 class ItineraryRepository {
 

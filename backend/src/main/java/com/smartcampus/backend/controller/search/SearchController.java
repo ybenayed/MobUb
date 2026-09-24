@@ -8,13 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * Expose la recherche de lieux (géocodage) au frontend.
- * GET /api/search?q=kedge
- *
- * Utilisé à la fois par la recherche simple (barre du haut) et par
- * la recherche d'itinéraire (origine + destination) côté Android.
- */
+//Expose la recherche de lieux  
 @RestController
 public class SearchController {
 

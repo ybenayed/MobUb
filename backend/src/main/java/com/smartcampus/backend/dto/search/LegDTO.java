@@ -2,7 +2,7 @@ package com.smartcampus.backend.dto.search;
 
 import lombok.*;
 import java.util.List;
-
+//  dto pour un "leg" d'un itineraire, c'est a dire un segment de trajet entre deux points, avec un mode de transport et des informations sur le trajet.
 @Getter
 @Setter
 public class LegDTO {

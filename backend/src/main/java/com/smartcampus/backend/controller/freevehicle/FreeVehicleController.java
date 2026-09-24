@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
+// Controller pour la gestion des vehicules libres (scooters, velos, trottinettes) 
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -22,12 +22,9 @@ import java.util.Map;
 @CrossOrigin(origins = "*")
 public class FreeVehicleController {
 
-    private final VehicleTypeFVService vehicleTypeFVService;                     // catalogue TYPES (stable, import ponctuel)
+    private final VehicleTypeFVService vehicleTypeFVService;                     
     private final FreeVehicleInfoService freeVehicleInfoService;                  // 100% dynamique (detail, liste, comptage)
     private final FreeVehiclePositionCacheService freeVehiclePositionCacheService; // positions brutes (cache 10s)
-
-
-    // ─── Import des TYPES uniquement (catalogue stable : scooter/velo/trottinette, ne bouge presque jamais)
 
     @PostMapping("/import-types")
     public ResponseEntity<Map<String, Integer>> importVehicleTypes() {
@@ -35,7 +32,7 @@ public class FreeVehicleController {
         return ResponseEntity.ok(Map.of("imported", vehicleTypeFVService.importTypesFromApi()));
     }
 
-    // ─── API Front - 100% dynamique desormais
+    //  API Front - 100% dynamique desormais
 
     @GetMapping("/types")
     public ResponseEntity<List<VehicleTypeFVDTO>> getAllTypes() {
@@ -51,7 +48,7 @@ public class FreeVehicleController {
         return ResponseEntity.ok(freeVehicleInfoService.getAllVehicles());
     }
 
-    // ─── Temps reel (positions seules, format allege pour la carte)
+    // Temps reel (positions seules, format allege pour la carte)
 
     @GetMapping("/positions")
     public ResponseEntity<List<FreeVehiclePositionDTO>> getPositions(
@@ -62,7 +59,7 @@ public class FreeVehicleController {
         return ResponseEntity.ok(freeVehiclePositionCacheService.getAllPositions());
     }
 
-    // ─── Detail complet d'un vehicule - 100% dynamique, plus jamais de desync
+    //  Detail complet d'un vehicule - 100% dynamique
 
     @GetMapping("/{bikeId}")
     public ResponseEntity<FreeVehicleDTO> getVehicleInfo(@PathVariable String bikeId) {
@@ -70,7 +67,7 @@ public class FreeVehicleController {
         return dto != null ? ResponseEntity.ok(dto) : ResponseEntity.notFound().build();
     }
 
-    // ─── Comptage par type - calcule en direct depuis le cache
+    // Comptage par type 
 
     @GetMapping("/types/count")
     public ResponseEntity<List<VehicleTypeCountDTO>> getVehicleCountByType() {

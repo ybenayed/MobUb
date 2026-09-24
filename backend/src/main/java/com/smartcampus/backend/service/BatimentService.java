@@ -97,10 +97,8 @@ public class BatimentService {
            for (JsonNode feature : features) {
     totalFeatures++;
 
-    // Récupère le nom s'il existe (peut être null si la propriété "name" manque)
     String name = feature.path("properties").path("name").asText(null);
 
-    // N'ignore QUE la feature du campus global (s'il y a un nom et qu'il correspond)
     if (name != null && name.equalsIgnoreCase("Campus de Bordeaux")) {
         continue; // C'est le contour du campus, géré par CampusService
     }
@@ -119,7 +117,6 @@ public class BatimentService {
     String geoFill = feature.path("properties").path("fill").asText(null);
     String geoStroke = feature.path("properties").path("stroke").asText(null);
 
-    // Récupère l'appartenance (même avec un name null, il se basera sur la couleur geoFill)
     String appartenance = resolveAppartenance(feature, name, geoFill, colorToInstitution);
 
     if (geoFill != null && !colorToInstitution.containsKey(geoFill.toUpperCase())
@@ -132,7 +129,7 @@ public class BatimentService {
     String strokeColor = (geoStroke != null) ? geoStroke : fillColor;
 
     Batiment batiment = new Batiment();
-    batiment.setName(name); // Sera enregistré comme NULL en base si absent
+    batiment.setName(name); 
     batiment.setAppartenance(appartenance);
     batiment.setFillColor(fillColor);
     batiment.setStrokeColor(strokeColor);
@@ -162,16 +159,7 @@ public class BatimentService {
         }
     }
 
-    /**
-     * Détermine l'institution d'un bâtiment, par ordre de fiabilité :
-     * 1. properties.appartenance explicite dans le GeoJSON
-     * 2. properties.institution explicite dans le GeoJSON
-     * 3. couleur "fill" du bâtiment, comparée aux couleurs officielles connues
-     *    (le plus fiable en pratique : les noms de bâtiments comme "A", "ENSC",
-     *    "Accueil" ne contiennent jamais le nom de l'institution)
-     * 4. mots-clés dans le nom (dernier recours, peu fiable)
-     * 5. défaut : Université de Bordeaux
-     */
+
 private String resolveAppartenance(JsonNode feature, String name, String geoFill,
                                     Map<String, String> colorToInstitution) {
     if (feature.path("properties").has("appartenance")) {
@@ -188,7 +176,6 @@ private String resolveAppartenance(JsonNode feature, String name, String geoFill
         }
     }
 
-    // Sécurité si name est null
     if (name != null) {
         String lower = name.toLowerCase();
         if (lower.contains("résidence") || lower.contains("residence") || lower.contains("crous")) {

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-
+// Controller pour la gestion des stations de bus/tram
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class StationTBController {
     private final StationTBService stationTBService;   // STATIQUE
     private final PassageTBService passageTBService;    // DYNAMIQUE
 
-    // ─── GROUPE 1 - Import / Admin
+    //  Import
 
     @PostMapping("/import")
     public ResponseEntity<Map<String, Integer>> importStations() {
@@ -31,18 +31,12 @@ public class StationTBController {
         return ResponseEntity.ok(Map.of("imported", stationTBService.importStationsFromApi()));
     }
 
-    // ─── GROUPE 2 - API Front (lecture seule, statique)
-
     @GetMapping
     public ResponseEntity<List<StationTBDTO>> getAllStationsTB() {
         return ResponseEntity.ok(stationTBService.getAllStations());
     }
 
-    /**
-     * GET /api/stationTB/positions            -> toutes les stations
-     * GET /api/stationTB/positions?mode=TRAM  -> uniquement tram
-     * GET /api/stationTB/positions?mode=BUS   -> uniquement bus
-     */
+    //le get selon le type de transport (bus ou tram)
     @GetMapping("/positions")
     public ResponseEntity<List<StationPositionTBDTO>> getPositions(
             @RequestParam(required = false) String mode) {
@@ -52,11 +46,8 @@ public class StationTBController {
         return ResponseEntity.ok(stationTBService.getAllPositions());
     }
 
-    // ─── GROUPE 3 - Temps reel (dynamique, jamais persiste)
+    // Temps reel (dynamique)
 
-    /**
-     * GET /api/stationTB/passages?stopId=bordeaux:StopPoint:BP:3729:LOC
-     */
     @GetMapping("/passages")
     public ResponseEntity<List<PassageTBDTO>> getNextPassages(@RequestParam String stopId) {
         return ResponseEntity.ok(passageTBService.getNextPassages(stopId));

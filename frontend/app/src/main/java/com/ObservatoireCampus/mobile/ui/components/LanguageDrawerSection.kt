@@ -25,11 +25,10 @@ private fun AppLanguage.label(): String = when (this) {
     AppLanguage.AR -> "العربية (Arabe)"
 }
 
-// Dans LanguageDrawerSection.kt
 
 @Composable
 fun LanguageDrawerSection(
-    languageViewModel: LanguageViewModel, // <-- AJOUT de la gestion de langue
+    languageViewModel: LanguageViewModel,
     currentLanguage: AppLanguage,
     isTranslating: Boolean,
     onLanguageSelected: (AppLanguage) -> Unit,
@@ -63,13 +62,12 @@ fun LanguageDrawerSection(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Translate,
-                        contentDescription = translatedLabel, // <-- Utilisation du label traduit
+                        contentDescription = translatedLabel,
                         tint = ObcampusPrimary,
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
 
-                    // <-- Utilisation du label traduit ici :
                     Text(text = translatedLabel, modifier = Modifier.weight(1f))
 
                     Text(

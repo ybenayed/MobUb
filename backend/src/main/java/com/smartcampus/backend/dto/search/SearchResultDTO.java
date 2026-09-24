@@ -1,5 +1,5 @@
 package com.smartcampus.backend.dto.search;
-
+// dto pour un resultat de recherche
 public class SearchResultDTO {
 
     private String name;

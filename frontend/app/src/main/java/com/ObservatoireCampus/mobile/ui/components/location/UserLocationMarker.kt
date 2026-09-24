@@ -11,20 +11,11 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 
-/**
- * Crée (ou déplace si elle existe déjà) le marqueur "Ma position" sur la carte.
- * Ne nécessite aucune modification de CampusMap.kt : on manipule directement
- * l'instance MapView déjà exposée via onMapReady dans MapScreen.
- *
- * Retourne le Marker créé/mis à jour, à conserver dans un `remember` côté appelant
- * pour pouvoir le repositionner sans en recréer un nouveau à chaque fois.
- */
-// Dans location.kt
 fun upsertUserLocationMarker(
     mapView: MapView,
     existing: Marker?,
     point: GeoPoint,
-    titleText: String, // <-- AJOUT : On passe le titre déjà traduit ici
+    titleText: String,
     onClick: () -> Unit
 ): Marker {
     val marker = existing ?: Marker(mapView).also {
@@ -37,20 +28,18 @@ fun upsertUserLocationMarker(
         mapView.overlays.add(it)
     }
 
-    marker.title = titleText // <-- MISE À JOUR DYNAMIQUE
+    marker.title = titleText
     marker.position = point
     mapView.invalidate()
     return marker
 }
 
-/** Supprime le marqueur de la carte (par ex. si la position redevient nulle). */
 fun removeUserLocationMarker(mapView: MapView, marker: Marker?) {
     marker ?: return
     mapView.overlays.remove(marker)
     mapView.invalidate()
 }
 
-/** Pin de localisation classique (forme "goutte") façon Google Maps, dessiné en code. */
 private fun createUserLocationDrawable(context: Context): BitmapDrawable {
     val widthDp = 40
     val heightDp = 52

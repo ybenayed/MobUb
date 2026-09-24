@@ -33,7 +33,6 @@ public class CampusService {
     private static final String CAMPUS_FEATURE_NAME = "Campus de Bordeaux";
     private static final String CAMPUS_NAME = "Campus Bordeaux";
 
-    // ─── LECTURE
 
     public List<CampusDTO> getAllCampus() {
         return campusRepository.findAll().stream().map(this::toDTO).toList();
@@ -45,10 +44,6 @@ public class CampusService {
                 .orElseThrow(() -> new RuntimeException("Campus introuvable : " + id));
     }
 
-    // ─── RESET + IMPORT (utilisé par ImportController, endpoint unique)
-    // Supprime le(s) campus existant(s) puis réimporte depuis Campus.json.
-    // À appeler seulement APRÈS que les bâtiments référençant l'ancien campus
-    // ont été supprimés (contrainte de clé étrangère batiment.campus_id).
 
     public CampusDTO resetAndImportFromLocalFile() {
         campusRepository.deleteAll();
@@ -62,8 +57,6 @@ public class CampusService {
             JsonNode root = objectMapper.readTree(is);
             JsonNode features = root.path("features");
 
-            // On récupère TOUTES les features "Campus de Bordeaux" (plusieurs
-            // parties possibles), pas seulement la première.
             List<Geometry> parts = new ArrayList<>();
             for (JsonNode feature : features) {
                 String featureName = feature.path("properties").path("name").asText("");
@@ -103,7 +96,6 @@ public class CampusService {
         }
     }
 
-    // ─── DTO
 
     private CampusDTO toDTO(Campus campus) {
         return CampusDTO.builder()
